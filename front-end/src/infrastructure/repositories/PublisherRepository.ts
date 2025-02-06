@@ -1,18 +1,51 @@
+import { Publisher } from "../../domain/entities/Publisher";
 import { IPublisherRepository } from "../../domain/irepositories/IPublisherRepository";
+import api from "../api";
 
 
 
 export class PublisherRepository implements IPublisherRepository {
-    getAllPublishers(): Promise<any> {
-        throw new Error("Method not implemented.");
+    private readonly apiUrl = "/publishers";
+
+    async getAllPublishers(): Promise<Publisher[]> {
+        const response = await api.get(this.apiUrl);
+        return response.data.map((publisher: any) => {
+            new Publisher(
+                publisher._id,
+                publisher._name,
+                publisher._site,
+                publisher._email,
+                publisher._avatar,
+                publisher._books
+            )
+        })
     }
-    getPublisherById(id: number): Promise<any> {
-        throw new Error("Method not implemented.");
+
+    async getPublisherById(id: number): Promise<Publisher> {
+        const response = await api.get(`${this.apiUrl}/${id}`);
+        return new Publisher(
+            response.data._id,
+            response.data._name,
+            response.data._site,
+            response.data._email,
+            response.data._avatar,
+            response.data._books
+        )
     }
-    getPublisherByName(name: string): Promise<any> {
-        throw new Error("Method not implemented.");
+
+    async getPublisherByName(name: string): Promise<Publisher> {
+        const response = await api.get(`${this.apiUrl}?name=${name}`);
+        return new Publisher(
+            response.data._id,
+            response.data._name,
+            response.data._site,
+            response.data._email,
+            response.data._avatar,
+            response.data._books
+        )
     }
-    savePublisher(publisher: any): Promise<void> {
-        throw new Error("Method not implemented.");
+
+    async savePublisher(publisher: any): Promise<void> {
+        await api.post(this.apiUrl, publisher);
     }
 }

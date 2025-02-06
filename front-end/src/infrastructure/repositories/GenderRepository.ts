@@ -1,15 +1,30 @@
 import { Gender } from "../../domain/entities/Gender";
 import { IGenderRepository } from "../../domain/irepositories/IGenderRepository";
+import api from "../api";
 
 
 export class GenderRepository implements IGenderRepository {
-    saveGender(gender: Gender): Promise<void> {
-        throw new Error("Method not implemented.");
+    private readonly apiUrl = "/genres";
+
+    async getAllGenders(): Promise<Gender[]> {
+        const response = await api.get(this.apiUrl);
+        return response.data.map((gender: any) => {
+            new Gender(
+                gender._id,
+                gender._name
+            )
+        });
     }
-    getAllGenders(): Promise<any> {
-        throw new Error("Method not implemented.");
+
+    async getGenderById(id: number): Promise<Gender> {
+        const response = await api.get(`${this.apiUrl}/${id}`);
+        return new Gender(
+            response.data._id,
+            response.data._name
+        )
     }
-    getGenderById(id: number): Promise<any> {
-        throw new Error("Method not implemented.");
+
+    async saveGender(gender: Gender): Promise<void> {
+        await api.post(this.apiUrl, gender);
     }
 }
