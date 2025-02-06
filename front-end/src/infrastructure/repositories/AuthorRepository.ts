@@ -1,18 +1,46 @@
 import { Author } from "../../domain/entities/Author";
 import { IAuthorRepository } from "../../domain/irepositories/IAuthorRepository";
+import api from "../api";
 
 
 export class AuthorRepository implements IAuthorRepository {
-    getAllAuthors(): Promise<Author[]> {
-        throw new Error("Method not implemented.");
+    private readonly apiUrl = "/authors";
+
+    async getAllAuthors(): Promise<Author[]> {
+        const response = await api.get(this.apiUrl);
+        return response.data.map((author: any) => {
+            new Author(
+                author._id,
+                author._name,
+                author._avatar,
+                author._books
+            )
+        })
     }
-    getAuthorById(id: number): Promise<Author> {
-        throw new Error("Method not implemented.");
+
+    async getAuthorById(id: number): Promise<Author> {
+        const response = await api.get(`${this.apiUrl}/${id}`);
+        return new Author(
+            response.data._id,
+            response.data._name,
+            response.data._avatar,
+            response.data._books
+        )
     }
-    getAuthorByName(name: string): Promise<Author[]> {
-        throw new Error("Method not implemented.");
+
+    async getAuthorByName(name: string): Promise<Author[]> {
+        const response = await api.get(`${this.apiUrl}?name=${name}`);
+        return response.data.map((author: any) => {
+            new Author(
+                author._id,
+                author._name,
+                author._avatar,
+                author._books
+            )
+        })
     }
-    saveAuthor(author: Author): Promise<void> {
-        throw new Error("Method not implemented.");
+
+    async saveAuthor(author: Author): Promise<void> {
+        await api.post(this.apiUrl, author);
     }
 }

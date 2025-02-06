@@ -3,18 +3,20 @@ export class User {
         private readonly _id: number,
         private _name: string,
         private _nickname: string,
-        private _mail: string,
+        private _email: string,
         private _password: string,
         private _birthData: Date,
-        private _registrationData: Date
+        private _registrationData: Date,
+        private _avatar: string
     ){
         this._id = _id;
         this._name = _name;
         this._nickname = _nickname;
-        this._mail = _mail;
+        this._email = _email;
         this._password = _password;
         this._birthData = _birthData;
         this._registrationData = _registrationData;
+        this._avatar = _avatar;
     }
 
     get id(){
@@ -30,7 +32,7 @@ export class User {
     }
 
     get mail(){
-        return this._mail;
+        return this._email;
     }
 
     get password(){
@@ -45,6 +47,10 @@ export class User {
         return this._registrationData;
     }
 
+    get avatar(){
+        return this._avatar;
+    }
+
     setName(name: string){
         this._name = name;
     }
@@ -53,8 +59,8 @@ export class User {
         this._nickname = nickname;
     }
 
-    setMail(mail: string){
-        this._mail = mail;
+    setMail(email: string){
+        this._email = email;
     }
 
     setPassword(password: string){
@@ -67,5 +73,9 @@ export class User {
 
     setRegistrationData(registrationData: Date){
         this._registrationData = registrationData;
+    }
+
+    setAvatar(avatar: string){
+        this._avatar = avatar;
     }
 }

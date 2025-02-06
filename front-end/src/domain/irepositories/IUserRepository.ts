@@ -6,5 +6,6 @@ export interface IUserRepository {
     getUserById(id: number): Promise<User>;
     getUserByUsername(username: string): Promise<User[]>;
     getUserByNickname(nickname: string): Promise<User[]>;
+    getUserByEmail(nickname: string): Promise<User[]>;
     saveUser(user: User): Promise<void>;
 }
