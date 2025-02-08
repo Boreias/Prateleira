@@ -2,7 +2,7 @@ import { IPublisherRepository } from "../../domain/irepositories/IPublisherRepos
 import { Publisher } from "../../domain/entities/Publisher";
 
 
-export class PublisherRepository implements IPublisherRepository {
+export class PublisherService implements IPublisherRepository {
     constructor(private PublisherRepository: IPublisherRepository) {}
 
     async getAllPublishers(): Promise<Publisher[]> {

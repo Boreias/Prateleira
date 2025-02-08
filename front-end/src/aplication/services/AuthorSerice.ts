@@ -2,7 +2,7 @@ import { IAuthorRepository } from "../../domain/irepositories/IAuthorRepository"
 import { Author } from "../../domain/entities/Author";
 
 
-export class AuthorRepository implements IAuthorRepository {
+export class AuthorService implements IAuthorRepository {
     constructor(private AuthorRepository: IAuthorRepository) {}
 
     async getAllAuthors(): Promise<Author[]> {
