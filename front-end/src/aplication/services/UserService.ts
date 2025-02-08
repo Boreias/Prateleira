@@ -2,9 +2,8 @@ import { IUserRepository } from "../../domain/irepositories/IUserRepository";
 import { User } from "../../domain/entities/User";
 
 
-export class UserRepository implements IUserRepository {
+export class UserService implements IUserRepository {
     constructor(private UserRepository: IUserRepository) {}
-
     async getAllUsers(): Promise<User[]> {
         return await this.UserRepository.getAllUsers();
     }
@@ -19,6 +18,10 @@ export class UserRepository implements IUserRepository {
 
     async getUserByNickname(nickname: string): Promise<User[]> {
         return  await this.UserRepository.getUserByNickname(nickname);
+    }
+
+    async getUserByEmail(email: string): Promise<User[]> {
+        return await this.UserRepository.getUserByEmail(email);
     }
 
     async saveUser(user: User): Promise<void> {

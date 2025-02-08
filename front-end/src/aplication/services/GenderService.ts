@@ -2,7 +2,7 @@ import { IGenderRepository } from "../../domain/irepositories/IGenderRepository"
 import { Gender } from "../../domain/entities/Gender";
 
 
-export class GenderRepository implements IGenderRepository {
+export class GenderService implements IGenderRepository {
     constructor(private GenderRepository: IGenderRepository) {}
 
     async getAllGenders(): Promise<Gender[]> {

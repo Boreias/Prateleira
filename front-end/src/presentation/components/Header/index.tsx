@@ -4,7 +4,7 @@ import { Button, Col, Row, Form, Nav, Navbar, Container } from 'react-bootstrap'
 export const Header = () => 
 {
     return(
-        <Navbar expand="lg" className='bg-body-tertiary'>
+        <Navbar expand="lg" fixed='top' className='bg-body-tertiary'>
             <Container>
                 <Navbar.Brand href='/'>Prateleira</Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
