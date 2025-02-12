@@ -1,5 +1,16 @@
+import { Container, Row, Col } from 'react-bootstrap'
+import { Feed } from "../../components/Feed"
+
 export const Home = () => {
     return(
-        <p>Teste 3</p>
+        <div className='align-items-center'>
+            <Container>
+                <Row>
+                    <Col>
+                        <Feed />
+                    </Col>
+                </Row>
+            </Container>
+        </div>
     )
 }

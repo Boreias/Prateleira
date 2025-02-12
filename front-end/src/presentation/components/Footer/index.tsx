@@ -1,4 +1,5 @@
 import { Row, Col, Container, Image } from 'react-bootstrap'
+import { UlStyled, AStyled } from '../../../styles'
 import Icon from '../../../assets/icon.png'
 
 
@@ -9,9 +10,9 @@ export const Footer = () =>
             <Container>
                 <Row className='mt-2'>
                     <Col xs={7}>
-                        <Row>
+                        <Row className='align-items-center'>
                             <Col>
-                                <Image src={Icon} rounded />
+                                <Image src={Icon} width={128} height={128} rounded />
                             </Col>
                             <Col>
                                 <p className='mt-5'>O Prateleira serve para você que quer organizar suas leituras e acompanhar os seus amigos nas mais distintas histórias que os livros tem a oferecer.</p>
@@ -35,12 +36,12 @@ export const Footer = () =>
                         </Row>
                     </Col>
                     <Col>
-                        <ul className='mt-5'>
-                            <li><a href='/faq'>FAQ</a></li>
-                            <li><a href='/sobre'>Quem Somos</a></li>
-                            <li><a href='/livro/cadastro'>Cadastrar Livro</a></li>
-                            <li><a href='/autor/cadastro'>Cadastrar Autor</a></li>
-                        </ul>
+                        <UlStyled className='mt-5'>
+                            <li><AStyled href='/faq'>FAQ</AStyled></li>
+                            <li><AStyled href='/sobre'>Quem Somos</AStyled></li>
+                            <li><AStyled href='/livro/cadastro'>Cadastrar Livro</AStyled></li>
+                            <li><AStyled href='/autor/cadastro'>Cadastrar Autor</AStyled></li>
+                        </UlStyled>
                     </Col>
                 </Row>
             </Container>
