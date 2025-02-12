@@ -1,4 +1,5 @@
-import { Button, Col, Row, Form, Nav, Navbar, Container } from 'react-bootstrap';
+import { Button, Col, Row, Form, Nav, Navbar, Container, Image } from 'react-bootstrap';
+import Icon from '../../../assets/icon.png';
 
 
 export const Header = () => 
@@ -6,6 +7,7 @@ export const Header = () =>
     return(
         <Navbar expand="lg" fixed='top' className='bg-body-tertiary'>
             <Container>
+                <Image src={Icon} style={{marginRight: '8px'}} width={32} height={32} rounded />
                 <Navbar.Brand href='/'>Prateleira</Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
