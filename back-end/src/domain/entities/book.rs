@@ -18,7 +18,7 @@ pub struct Book {
     pub _isbn: String,
     pub _synopsis: String,
     pub _cover: String,
-    // pub _gender: String,
+    pub _genders: Vec<Uuid>,
 }
 
 
@@ -37,7 +37,8 @@ impl Book {
         _language: String,
         _isbn: String,
         _synopsis: String,
-        _cover: String
+        _cover: String,
+        _genders: Vec<Uuid>,
     ) -> Self {
         Book {
             _id,
@@ -53,7 +54,8 @@ impl Book {
             _language,
             _isbn,
             _synopsis,
-            _cover
+            _cover,
+            _genders
         }
     }
 }
