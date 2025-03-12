@@ -37,10 +37,10 @@ export const Footer = () =>
                     </Col>
                     <Col>
                         <UlStyled className='mt-5'>
-                            <li><AStyled href='/faq'>FAQ</AStyled></li>
-                            <li><AStyled href='/sobre'>Quem Somos</AStyled></li>
                             <li><AStyled href='/livro/cadastro'>Cadastrar Livro</AStyled></li>
                             <li><AStyled href='/autor/cadastro'>Cadastrar Autor</AStyled></li>
+                            <li><AStyled href='/sobre'>Quem Somos</AStyled></li>
+                            <li><AStyled href='/faq'>FAQ</AStyled></li>
                         </UlStyled>
                     </Col>
                 </Row>

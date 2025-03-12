@@ -27,10 +27,10 @@ export const Header = () =>
                     </Form>
                     <Nav className='me-auto'>
                         <Nav.Link href='/'>Home</Nav.Link>
-                        <Nav.Link href='/sobre'>Sobre</Nav.Link>
-                        <Nav.Link href='/faq'>FAQ</Nav.Link>
                         <Nav.Link href='/livro/cadastro'>Cadastrar Livro</Nav.Link>
                         <Nav.Link href='/autor/cadastro'>Cadastrar Autor</Nav.Link>
+                        <Nav.Link href='/sobre'>Sobre</Nav.Link>
+                        <Nav.Link href='/faq'>FAQ</Nav.Link>
                     </Nav>
                     <Button className='btn btn-primary' href='/login'>Entrar</Button>
                 </Navbar.Collapse>
