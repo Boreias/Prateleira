@@ -4,3 +4,22 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+sqlx = { version = "0.8.6", features= ["postgres"]}
+axum = "0.8.4"
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
+chrono = { version = "0.4.41", features = ["serde"] }
+tokio = { version = "1.45.1", features = ["full"] }
+dotenv = "0.15.0"
+hex = "0.4.3"
+base64 = "0.22.1"
+rand = "0.9.1"
+async-trait = "0.1.88"
+serde = { version = "1.0.219", features = ["derive"] }
+lettre = "0.11"
+
+# Cryptografy libraries
+pbkdf2 = "0.12.2"
+sha2 = "0.10.9"
+hmac = "0.12.1"
+totp-rs = "5.7.0"
+aes-gcm = "0.10.3"
