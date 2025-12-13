@@ -8,6 +8,7 @@ use std::env;
 pub fn send_mail(
     destinatario_email: &str,
     destinatario_nome: &str,
+    subject: &str,
     body: String
 ) -> Result<(), Box<dyn std::error::Error>> {
 
@@ -15,9 +16,9 @@ pub fn send_mail(
     let email_password = env::var("EMAIL_PASSWORD").expect("EMAIL_PASSWORD não definida");
 
     let email = Message::builder()
-        .from(format!("{} <{}>", "Trabalho Prático", email_sender.clone()).parse()?)
+        .from(format!("{} <{}>", "Prateleira", email_sender.clone()).parse()?)
         .to(format!("{} <{}>", destinatario_nome, destinatario_email).parse()?)
-        .subject("Código de Verificação")
+        .subject(subject)
         .singlepart(
             SinglePart::builder()
                 .header(header::ContentType::TEXT_PLAIN)

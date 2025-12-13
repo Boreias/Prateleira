@@ -19,16 +19,49 @@ CREATE TABLE Gender (
     name VARCHAR(255) NOT NULL
 );
 
+-- CREATE TABLE User (
+--     id SERIAL PRIMARY KEY,
+--     encrypted_data BYTEA NOT NULL,
+--     nonce BYTEA Not NULL
+--     -- name VARCHAR(255) NOT NULL,
+--     -- nickname VARCHAR(255) NOT NULL,
+--     -- email VARCHAR(255) NOT NULL,
+--     -- password VARCHAR(255) NOT NULL,
+--     -- birthData DATE,
+--     -- registrationData DATE NOT NULL DEFAULT CURRENT_DATE,
+--     -- avatar BYTEA
+-- );
+
 CREATE TABLE User (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    nickname VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    birthData DATE,
-    registrationData DATE NOT NULL DEFAULT CURRENT_DATE,
-    avatar BYTEA
+    user_id SERIAL NOT NULL,
+    field_name VARCHAR(255) NOT NULL,
+    encryp_value BYTEA NOT NULL,
+    nonce BYTEA,
+    auth_tag BYTEA
 );
+
+CREATE TABLE Search_Index (
+    id SERIAL PRIMARY KEY,
+    user_id SERIAL NOT NULL REFERENCES User(user_id),
+    field_name VARCHAR(255) NOT NULL,
+    index_value BYTEA NOT NULL
+);
+
+CREATE TABLE User_Password (
+    id SERIAL PRIMARY KEY,
+    user_id SERIAL NOT NULL REFERENCES User(user_id),
+    password_hash BYTEA NOT NULL,
+    salt BYTEA NOT NULL
+);
+
+CREATE TABLE Substring_Index (
+    id SERIAL PRIMARY KEY,
+    user_id SERIAL NOT NULL REFERENCES User(user_id),
+    field_name VARCHAR(255) NOT NULL,
+    token BYTEA    -- SHA256(K || token)
+);
+
 
 CREATE TABLE Book (
     id SERIAL PRIMARY KEY,
