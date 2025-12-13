@@ -1,6 +1,6 @@
 # Prateleira
 
-Projeto desenvolvido com React e TypeScript no Front-end e Rust no Back-end, sendo uma rede social voltada para leitura
+Projeto desenvolvido com Vue e TypeScript no Front-end e Rust no Back-end, sendo uma rede social voltada para leitura
 
 ## Para executar o back-end, executes os comandos:
 cd back-end
