@@ -1,33 +1,21 @@
 use axum::{
-    routing::{get, post, put, delete}, Router
+    routing::{get, post, put, delete},
+    Router
 };
-use std::{net::SocketAddr, sync::Arc};
+use std::{
+    net::SocketAddr,
+    sync::Arc
+};
 use dotenv::dotenv;
 
 mod app_state;
 use app_state::AppState;
 
 
-mod infrastructure {
-    pub mod crypto;
-    pub mod db;
-    pub mod dto;
-    pub mod email;
-    pub mod repositories;
-}
-
-mod application {
-    pub mod services;
-}
-
-mod presentation {
-    pub mod controllers;
-}
-
-mod domain {
-    pub mod entities;
-    pub mod irepositories;
-}
+mod infrastructure;
+mod application;
+mod presentation;
+mod domain;
 
 use infrastructure::db::connection::create_pool;
 use application::services::user_service::UserService;
@@ -47,7 +35,7 @@ async fn main() {
 
     dotenv().ok();
 
-    let pool = create_pool().await.expect("Erro ao conectar ao banco");
+    let pool = create_pool().await;
 
     let user_service = Arc::new(UserService::new(pool.clone()));
 
@@ -68,6 +56,6 @@ async fn main() {
         .with_state(state);
 
     let addr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
-    let listner = tokio::net::TcpListener::bind(addr).await.unwrap();
-    axum::serve(listner, app.into_make_service_with_connect_info::<SocketAddr>()).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.unwrap();
 }

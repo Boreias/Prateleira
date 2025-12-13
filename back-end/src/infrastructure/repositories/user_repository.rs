@@ -1,14 +1,15 @@
+use serde_json::json;
 use uuid::Uuid;
 use chrono::{NaiveDate, Utc};
 use sqlx::{PgPool, Row};
 use async_trait::async_trait;
-use rand::{TryRngCore};
-use rand::rngs::OsRng;
+use std::env;
+use serde_json;
 
 use crate::domain::irepositories::iuser_repository::IUserRepository;
 use crate::infrastructure::dto::user_dto::UserDTO;
 
-use crate::infrastructure::crypto::crypto::{derive_password_hash};
+use crate::infrastructure::crypto::crypto::{derive_password_hash, generate_salt, simple_hash, encrypt, decrypt};
 
 
 pub struct UserRepository {
@@ -34,27 +35,59 @@ impl IUserRepository for UserRepository {
         avatar: String
     ) -> Result<(), String> {
 
+        let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY não definida");
+
         let id = Uuid::new_v4();
-        let registration_date = Utc::now().date_naive();
 
-        let mut salt = vec![0u8; 16];
-        let _ = OsRng.try_fill_bytes(&mut salt);
+        let hash_email = simple_hash(secret_key.clone().as_bytes(), email);
 
-        let hash_password = derive_password_hash(password, salt.clone());
-
-        sqlx::query("INSERT INTO user (id, name, nickname, email, password, salt, birthDate, registrationDate, avatar) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9)")
-            .bind(id.to_string())
-            .bind(name)
-            .bind(nickname)
-            .bind(email)
-            .bind(hash_password)
-            .bind(salt)
-            .bind(birth_date)
-            .bind(registration_date.to_string())
-            .bind(avatar)
+        sqlx::query("INSERT INTO Search_Index (user_id, field_name, index_value) VALUES ($1, $2, $3)")
+            .bind(id.clone().to_string())
+            .bind("email".to_string())
+            .bind(hash_email)
             .execute(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
+
+
+        let salt = generate_salt();
+
+        let hash_password = derive_password_hash(password, salt.clone());
+
+        sqlx::query("INSERT INTO User_Password (user_id, password_hash, salt) VALUES ($1, $2, $3)")
+                .bind(id.clone().to_string())
+                .bind(hash_password)
+                .bind(salt)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
+
+
+        let registration_date = Utc::now().date_naive();
+
+        let data = json!({
+            "name": name,
+            "nickname": nickname,
+            "birth_date": birth_date,
+            "registration_date": registration_date,
+            "avatar": avatar
+        });
+
+        if let Some(object_data) = data.as_object() {
+            for (key, value) in object_data {
+                let (hash_data, hash_nonce) = encrypt(secret_key.clone().as_bytes(), value.to_string()).unwrap();
+                sqlx::query("INSERT INTO User (user_id, field_name, encryp_value, nonce) VALUES ($1, $2, $3, $4)")
+                    .bind(id.clone().to_string())
+                    .bind(key)
+                    .bind(hash_data)
+                    .bind(hash_nonce)
+                    .execute(&self.pool)
+                    .await
+                    .map_err(|e| e.to_string())?;
+            }
+        } else {
+            println!("Erro ao converter json em objeto");
+        }
 
         Ok(())
     }
