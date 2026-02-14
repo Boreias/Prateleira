@@ -1,19 +1,16 @@
-use uuid::Uuid;
-
-
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Gender {
-    id: Uuid,
+    id: i32,
     name: String
 }
 
 
 impl Gender {
-    pub fn new(id: Uuid, name: String) -> Gender {
-        Gender { id, name}
+    pub fn new(id: i32, name: String) -> Gender {
+        Gender { id, name }
     }
 
-    pub fn get_id(&self) -> Uuid {
+    pub fn get_id(&self) -> i32 {
         self.id.clone()
     }
 

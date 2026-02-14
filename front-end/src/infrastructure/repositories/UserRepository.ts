@@ -1,5 +1,5 @@
 import { User } from "../../domain/entities/User";
-import { IUserRepository } from "../../domain/irepositories/IUserRepository";
+import type { IUserRepository } from "../../domain/irepositories/IUserRepository";
 import api from "../api";
 
 

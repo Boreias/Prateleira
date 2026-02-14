@@ -1,13 +1,11 @@
-use uuid::Uuid;
-
 use crate::domain::entities::author::Author;
 use crate::domain::entities::publisher::Publisher;
 use crate::domain::entities::gender::Gender;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Book {
-    id: Uuid,
+    id: i32,
     title: String,
     subtitle: Option<String>,
     authors: Vec<Author>,
@@ -26,7 +24,7 @@ pub struct Book {
 
 impl Book {
     pub fn new(
-        id: Uuid,
+        id: i32,
         title: String,
         subtitle: Option<String>,
         authors: Vec<Author>,
@@ -61,7 +59,7 @@ impl Book {
         }
     }
 
-    pub fn get_id(&self) -> Uuid {
+    pub fn get_id(&self) -> i32 {
         self.id.clone()
     }
 

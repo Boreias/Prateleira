@@ -1,25 +1,27 @@
-use uuid::Uuid;
-
 use crate::domain::entities::book::Book;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Author {
-    id: Uuid,
-    name: String,
-    avatar: String,
-    books: Option<Vec<Book>>
+    id: i32,
+    pub name: String,
+    pub avatar: String,
+    pub books: Option<Vec<Book>>
 }
 
 
 impl Author {
-    pub fn new(id: Uuid, name: String, avatar: String, books: Option<Vec<Book>>) -> Author {
+    pub fn new(id: i32, name: String, avatar: String, books: Option<Vec<Book>>) -> Author {
         Author {
             id,
             name,
             avatar,
             books
         }
+    }
+
+    pub fn get_id(&self) -> i32 {
+        self.id
     }
 
     pub fn get_name(&self) -> String {

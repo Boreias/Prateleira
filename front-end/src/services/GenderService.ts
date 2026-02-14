@@ -1,5 +1,5 @@
-import { IGenderRepository } from "../../domain/irepositories/IGenderRepository";
-import { Gender } from "../../domain/entities/Gender";
+import type { IGenderRepository } from "../domain/irepositories/IGenderRepository";
+import { Gender } from "../domain/entities/Gender";
 
 
 export class GenderService implements IGenderRepository {

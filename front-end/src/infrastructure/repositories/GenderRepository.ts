@@ -1,5 +1,5 @@
 import { Gender } from "../../domain/entities/Gender";
-import { IGenderRepository } from "../../domain/irepositories/IGenderRepository";
+import type { IGenderRepository } from "../../domain/irepositories/IGenderRepository";
 import api from "../api";
 
 

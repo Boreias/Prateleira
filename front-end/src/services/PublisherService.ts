@@ -1,5 +1,5 @@
-import { IPublisherRepository } from "../../domain/irepositories/IPublisherRepository";
-import { Publisher } from "../../domain/entities/Publisher";
+import type { IPublisherRepository } from "../domain/irepositories/IPublisherRepository";
+import { Publisher } from "../domain/entities/Publisher";
 
 
 export class PublisherService implements IPublisherRepository {

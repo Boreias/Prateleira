@@ -1,5 +1,5 @@
-import { IAuthorRepository } from "../../domain/irepositories/IAuthorRepository";
-import { Author } from "../../domain/entities/Author";
+import type { IAuthorRepository } from "../domain/irepositories/IAuthorRepository";
+import { Author } from "../domain/entities/Author";
 
 
 export class AuthorService implements IAuthorRepository {

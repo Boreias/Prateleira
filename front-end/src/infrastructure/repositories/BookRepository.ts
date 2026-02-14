@@ -2,7 +2,7 @@ import { Author } from "../../domain/entities/Author";
 import { Book } from "../../domain/entities/Book";
 import { Gender } from "../../domain/entities/Gender";
 import { Publisher } from "../../domain/entities/Publisher";
-import { IBookRepository } from "../../domain/irepositories/IBookReposity";
+import type { IBookRepository } from "../../domain/irepositories/IBookReposity";
 import api from "../api";
 
 

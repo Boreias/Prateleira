@@ -1,4 +1,10 @@
-use axum::{extract::{Json, State, ConnectInfo}, response::{IntoResponse, Json as JsonResponse}, http::StatusCode};
+use axum::{
+    extract::{Json, State, ConnectInfo},
+    response::{IntoResponse, Json as JsonResponse},
+    http::StatusCode,
+    routing::{get, post, put, delete},
+    Router
+};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 
@@ -50,6 +56,16 @@ pub struct DeleteUserRequest {
 #[derive(Serialize)]
 pub struct ApiResponse {
     pub message: String
+}
+
+pub fn user_routes() -> Router<AppState> {
+    Router::new()
+        .route("/registerUser", post(register_user))
+        .route("/findUserById", get(find_user_by_id))
+        .route("/findUserByEmail", get(find_user_by_email))
+        .route("/findUserByNickname", get(find_user_by_nickname))
+        .route("/alterUser", put(update_user))
+        .route("/deleteUser", delete(remove_user))
 }
 
 pub async fn register_user(

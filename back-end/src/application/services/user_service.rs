@@ -1,7 +1,7 @@
 use sqlx::PgPool;
 
 use crate::domain::irepositories::iuser_repository::IUserRepository;
-use crate::infrastructure::dto::user_dto::UserDTO;
+use crate::infrastructure::db::models::user_row::UserRow;
 use crate::infrastructure::repositories::user_repository::UserRepository;
 
 
@@ -32,15 +32,15 @@ impl UserService {
         self.repository.create_user(name, nickname, email, password, birth_date, avatar).await
     }
 
-    pub async fn get_user_by_id(&self, id: String) -> Result<Option<UserDTO>, String> {
+    pub async fn get_user_by_id(&self, id: String) -> Result<Option<UserRow>, String> {
         self.repository.get_user_by_id(id).await
     }
 
-    pub async fn get_user_by_email(&self, email: String) -> Result<Option<UserDTO>, String> {
+    pub async fn get_user_by_email(&self, email: String) -> Result<Option<UserRow>, String> {
         self.repository.get_user_by_email(email).await
     }
 
-    pub async fn get_user_by_nickname(&self, nickname: String) -> Result<Vec<UserDTO>, String> {
+    pub async fn get_user_by_nickname(&self, nickname: String) -> Result<Vec<UserRow>, String> {
         self.repository.get_user_by_nickname(nickname).await
     }
 

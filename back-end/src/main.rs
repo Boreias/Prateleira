@@ -1,11 +1,9 @@
-use axum::{
-    routing::{get, post, put, delete},
-    Router
-};
+use axum::Router;
 use std::{
     net::SocketAddr,
     sync::Arc
 };
+use std::env;
 use dotenv::dotenv;
 
 mod app_state;
@@ -18,15 +16,8 @@ mod presentation;
 mod domain;
 
 use infrastructure::db::connection::create_pool;
-use application::services::user_service::UserService;
-use presentation::controllers::user_controller::{
-    register_user,
-    find_user_by_id,
-    find_user_by_email,
-    find_user_by_nickname,
-    update_user,
-    remove_user
-};
+use presentation::controllers::user_controller::user_routes;
+use presentation::controllers::author_controller::author_routes;
 
 
 
@@ -34,25 +25,18 @@ use presentation::controllers::user_controller::{
 async fn main() {
 
     dotenv().ok();
+    let database_url = env::var("DATABASE_URL")
+        .expect("Variável de ambiente DATABASE_URL não definida");
 
-    let pool = create_pool().await;
-
-    let user_service = Arc::new(UserService::new(pool.clone()));
+    let pool = create_pool(&database_url).await;
 
     let state = AppState {
-        db_pool: Arc::new(pool),
-        user_service,
+        db_pool: Arc::new(pool)
     };
 
-
     let app = Router::new()
-        .route("/", get( || async { "Hello, world!!" }))
-        .route("/registerUser", post(register_user))
-        .route("/findUserById", get(find_user_by_id))
-        .route("/findUserByEmail", get(find_user_by_email))
-        .route("/findUserByNickname", get(find_user_by_nickname))
-        .route("/alterUser", put(update_user))
-        .route("/deleteUser", delete(remove_user))
+        .nest("/user", user_routes())
+        .nest("/author", author_routes())
         .with_state(state);
 
     let addr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
