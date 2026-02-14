@@ -1,5 +1,5 @@
-import { IUserRepository } from "../../domain/irepositories/IUserRepository";
-import { User } from "../../domain/entities/User";
+import type { IUserRepository } from "../domain/irepositories/IUserRepository";
+import { User } from "../domain/entities/User";
 
 
 export class UserService implements IUserRepository {

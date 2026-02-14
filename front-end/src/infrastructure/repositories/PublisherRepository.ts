@@ -1,5 +1,5 @@
 import { Publisher } from "../../domain/entities/Publisher";
-import { IPublisherRepository } from "../../domain/irepositories/IPublisherRepository";
+import type { IPublisherRepository } from "../../domain/irepositories/IPublisherRepository";
 import api from "../api";
 
 

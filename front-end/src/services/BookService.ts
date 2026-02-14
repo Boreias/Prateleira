@@ -1,8 +1,8 @@
-import { IBookRepository } from "../../domain/irepositories/IBookReposity";
-import { Book } from "../../domain/entities/Book";
-import { Author } from "../../domain/entities/Author";
-import { Publisher } from "../../domain/entities/Publisher";
-import { Gender } from "../../domain/entities/Gender";
+import type { IBookRepository } from "../domain/irepositories/IBookReposity";
+import { Book } from "../domain/entities/Book";
+import { Author } from "../domain/entities/Author";
+import { Publisher } from "../domain/entities/Publisher";
+import { Gender } from "../domain/entities/Gender";
 
 
 export class BookService {

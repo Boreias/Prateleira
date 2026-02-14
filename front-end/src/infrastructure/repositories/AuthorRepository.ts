@@ -1,5 +1,5 @@
 import { Author } from "../../domain/entities/Author";
-import { IAuthorRepository } from "../../domain/irepositories/IAuthorRepository";
+import type { IAuthorRepository } from "../../domain/irepositories/IAuthorRepository";
 import api from "../api";
 
 

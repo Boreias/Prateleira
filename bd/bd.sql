@@ -1,12 +1,12 @@
 CREATE DATABASE Prateleira;
 
-CREATE TABLE Author (
+CREATE TABLE author (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     avatar BYTEA
 );
 
-CREATE TABLE Publisher (
+CREATE TABLE publisher (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     site VARCHAR(255),
@@ -14,9 +14,21 @@ CREATE TABLE Publisher (
     avatar BYTEA
 );
 
-CREATE TABLE Gender (
+CREATE TABLE gender (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE gender_created_at (
+    id SERIAL PRIMARY KEY,
+    gender_id SERIAL NOT NULL REFERENCES gender(id),
+    user_id SERIAL NOT NULL REFERENCES user(id)
+);
+
+CREATE TABLE book_publisher (
+    id SERIAL PRIMARY KEY,
+    book_id SERIAL NOT NULL REFERENCES book(id),
+    publisher_id SERIAL NOT NULL REFERENCES publisher(id)
 );
 
 -- CREATE TABLE User (
@@ -32,7 +44,7 @@ CREATE TABLE Gender (
 --     -- avatar BYTEA
 -- );
 
-CREATE TABLE User (
+CREATE TABLE user (
     id SERIAL PRIMARY KEY,
     user_id SERIAL NOT NULL,
     field_name VARCHAR(255) NOT NULL,
@@ -41,21 +53,21 @@ CREATE TABLE User (
     auth_tag BYTEA
 );
 
-CREATE TABLE Search_Index (
+CREATE TABLE search_index (
     id SERIAL PRIMARY KEY,
     user_id SERIAL NOT NULL REFERENCES User(user_id),
     field_name VARCHAR(255) NOT NULL,
     index_value BYTEA NOT NULL
 );
 
-CREATE TABLE User_Password (
+CREATE TABLE user_password (
     id SERIAL PRIMARY KEY,
     user_id SERIAL NOT NULL REFERENCES User(user_id),
     password_hash BYTEA NOT NULL,
     salt BYTEA NOT NULL
 );
 
-CREATE TABLE Substring_Index (
+CREATE TABLE substring_index (
     id SERIAL PRIMARY KEY,
     user_id SERIAL NOT NULL REFERENCES User(user_id),
     field_name VARCHAR(255) NOT NULL,
@@ -63,7 +75,7 @@ CREATE TABLE Substring_Index (
 );
 
 
-CREATE TABLE Book (
+CREATE TABLE book (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     subtitle VARCHAR(255),
@@ -79,27 +91,27 @@ CREATE TABLE Book (
     cover BYTEA
 );
 
-CREATE TABLE BookAuthor(
+CREATE TABLE book_author(
     id SERIAL PRIMARY KEY,
     book_id SERIAL NOT NULL REFERENCES Book(id),
     author_id SERIAL NOT NULL REFERENCES Author(id)
 );
 
-CREATE TABLE BookGender(
+CREATE TABLE book_gender(
     id SERIAL PRIMARY KEY,
     book_id SERIAL NOT NULL REFERENCES Book(id),
     gender_id SERIAL NOT NULL REFERENCES Gender(id)
 );
 
-CREATE TABLE ReadingStatus(
+CREATE TABLE reading_status(
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL
 )
 
-CREATE TABLE BookUser(
+CREATE TABLE book_user(
     id SERIAL PRIMARY KEY,
-    book_id SERIAL NOT NULL REFERENCES Book(id),
-    user_id SERIAL NOT NULL REFERENCES User(id),
+    book_id SERIAL NOT NULL REFERENCES book(id),
+    user_id SERIAL NOT NULL REFERENCES user(id),
     have BOOLEAN,
     desirable BOOLEAN,
     favorite BOOLEAN,
@@ -110,14 +122,21 @@ CREATE TABLE BookUser(
     reading_end_date DATE
 );
 
-CREATE TABLE UserFriendRequest(
+CREATE TABLE book_review(
+    id SERIAL PRIMARY KEY,
+    book_id SERIAL NOT NULL REFERENCES book(id),
+    user_id SERIAL NOT NULL REFERENCES user(id),
+    review INTEGER NOT NULL
+);
+
+CREATE TABLE user_friend_request(
     id SERIAL PRIMARY KEY,
     requesting_user_id SERIAL NOT NULL REFERENCES User(id),
     user_requested_id SERIAL NOT NULL REFERENCES User(id),
     date_request DATE NOT NULL DEFAULT CURRENT_DATE
 );
 
-CREATE TABLE UserFriendship(
+CREATE TABLE user_friendship(
     id SERIAL PRIMARY KEY,
     requesting_user_id SERIAL NOT NULL REFERENCES User(id),
     user_requested_id SERIAL NOT NULL REFERENCES User(id),

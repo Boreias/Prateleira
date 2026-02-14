@@ -7,7 +7,7 @@ use std::env;
 use serde_json;
 
 use crate::domain::irepositories::iuser_repository::IUserRepository;
-use crate::infrastructure::dto::user_dto::UserDTO;
+use crate::infrastructure::db::models::user_row::UserRow;
 
 use crate::infrastructure::crypto::crypto::{derive_password_hash, generate_salt, simple_hash, encrypt, decrypt};
 
@@ -92,7 +92,7 @@ impl IUserRepository for UserRepository {
         Ok(())
     }
 
-    async fn get_user_by_id(&self, id: String) -> Result<Option<UserDTO>, String> {
+    async fn get_user_by_id(&self, id: String) -> Result<Option<UserRow>, String> {
         let row = sqlx::query("SELECT id, name, nickname, email, birthDate, avatar FROM user WHERE id = $1")
             .bind(id)
             .fetch_optional(&self.pool)
@@ -104,7 +104,7 @@ impl IUserRepository for UserRepository {
             let birth_date = NaiveDate::parse_from_str(row.get("birthDate"), "%Y-%m-%d")
                 .map_err(|e| e.to_string())?;
 
-            Ok(Some(UserDTO {
+            Ok(Some(UserRow {
                 id,
                 name: row.get("name"),
                 nickname: row.get("nickname"),
@@ -117,7 +117,7 @@ impl IUserRepository for UserRepository {
         }
     }
 
-    async fn get_user_by_email(&self, email: String) -> Result<Option<UserDTO>, String> {
+    async fn get_user_by_email(&self, email: String) -> Result<Option<UserRow>, String> {
         let row = sqlx::query("SELECT id, name, nickname, email, birthDate, avatar FROM user WHERE email = $1")
             .bind(email)
             .fetch_optional(&self.pool)
@@ -128,7 +128,7 @@ impl IUserRepository for UserRepository {
             let id = Uuid::parse_str(row.get("id")).map_err(|e| e.to_string())?;
             let birth_date = NaiveDate::parse_from_str(row.get("birthDate"), "%Y-%m-%d").map_err(|e| e.to_string())?;
 
-            Ok(Some(UserDTO {
+            Ok(Some(UserRow {
                 id,
                 name: row.get("name"),
                 nickname: row.get("nickname"),
@@ -141,7 +141,7 @@ impl IUserRepository for UserRepository {
         }
     }
 
-    async fn get_user_by_nickname(&self, nickname: String) -> Result<Vec<UserDTO>, String> {
+    async fn get_user_by_nickname(&self, nickname: String) -> Result<Vec<UserRow>, String> {
         let rows = sqlx::query("SELECT id, name, nickname, email, birthDate, avatar FROM user WHERE nickname = $1")
             .bind(nickname)
             .fetch_all(&self.pool)
@@ -154,7 +154,7 @@ impl IUserRepository for UserRepository {
             let id = Uuid::parse_str(row.get("id")).map_err(|e| e.to_string())?;
             let birth_date = NaiveDate::parse_from_str(row.get("birthDate"), "%Y-%m-%d").map_err(|e| e.to_string())?;
 
-            let user = UserDTO {
+            let user = UserRow {
                 id,
                 name: row.get("name"),
                 nickname: row.get("nickname"),

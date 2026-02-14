@@ -1,11 +1,9 @@
-use uuid::Uuid;
-
 use crate::domain::entities::book::Book;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Publisher {
-    id: Uuid,
+    id: i32,
     name: String,
     site: Option<String>,
     email: Option<String>,
@@ -16,7 +14,7 @@ pub struct Publisher {
 
 impl Publisher {
     pub fn new(
-        id: Uuid,
+        id: i32,
         name: String,
         site: Option<String>,
         email: Option<String>,
@@ -33,8 +31,8 @@ impl Publisher {
         }
     }
 
-    pub fn get_id(&self) -> Uuid {
-        self.id.clone()
+    pub fn get_id(&self) -> i32 {
+        self.id
     }
 
     pub fn get_name(&self) -> String {
