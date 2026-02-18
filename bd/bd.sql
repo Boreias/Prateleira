@@ -16,7 +16,7 @@ CREATE TABLE publisher (
 
 CREATE TABLE gender (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    name VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE gender_created_at (
@@ -115,7 +115,7 @@ CREATE TABLE book_user(
     have BOOLEAN,
     desirable BOOLEAN,
     favorite BOOLEAN,
-    reading_status SERIAL REFERENCES ReadingStatus(id),
+    reading_status SERIAL REFERENCES reading_status(id),
     pages_read INT,
     evaluation INT,
     review TEXT,
@@ -143,8 +143,8 @@ CREATE TABLE user_friendship(
     friendship_date DATE NOT NULL DEFAULT CURRENT_DATE
 );
 
-INSERT INTO ReadingStatus (name) VALUES ('Lido');
-INSERT INTO ReadingStatus (name) VALUES ('Lendo');
-INSERT INTO ReadingStatus (name) VALUES ('Quero ler');
-INSERT INTO ReadingStatus (name) VALUES ('Relendo');
-INSERT INTO ReadingStatus (name) VALUES ('Abandonei');
+INSERT INTO reading_status (name) VALUES ('Lido');
+INSERT INTO reading_status (name) VALUES ('Lendo');
+INSERT INTO reading_status (name) VALUES ('Quero ler');
+INSERT INTO reading_status (name) VALUES ('Relendo');
+INSERT INTO reading_status (name) VALUES ('Abandonei');

@@ -18,6 +18,7 @@ mod domain;
 use infrastructure::db::connection::create_pool;
 use presentation::controllers::user_controller::user_routes;
 use presentation::controllers::author_controller::author_routes;
+use presentation::controllers::gender_controller::gender_routes;
 
 
 
@@ -37,6 +38,7 @@ async fn main() {
     let app = Router::new()
         .nest("/user", user_routes())
         .nest("/author", author_routes())
+        .nest("/gender", gender_routes())
         .with_state(state);
 
     let addr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();

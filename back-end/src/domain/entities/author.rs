@@ -1,7 +1,9 @@
+use serde::Serialize;
+
 use crate::domain::entities::book::Book;
 
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Author {
     id: i32,
     pub name: String,
