@@ -1,9 +1,11 @@
+use serde::Serialize;
+
 use crate::domain::entities::author::Author;
 use crate::domain::entities::publisher::Publisher;
 use crate::domain::entities::gender::Gender;
 
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Book {
     id: i32,
     title: String,

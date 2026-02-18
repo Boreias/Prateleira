@@ -16,7 +16,8 @@ pub async fn create_pool(database_url: &str) -> PgPool {
 
 #[cfg(test)]
 mod tests {
-    use sqlx::{query, query_as};
+    // use sqlx::{query, query_as};
+    use sqlx::{query_as};
     use std::env;
     use dotenv::dotenv;
 
