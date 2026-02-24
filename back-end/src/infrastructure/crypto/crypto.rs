@@ -4,7 +4,7 @@ use aes_gcm::{
     Aes256Gcm,
     aead::{Aead, AeadCore, KeyInit, OsRng as OsRngAes, generic_array::{GenericArray}}
 };
-use rand::{TryRngCore, rngs::OsRng};
+use rand::{Rng, rngs::StdRng};
 use hex::{decode, encode};
 
 
@@ -13,7 +13,8 @@ const KEY_LENGTH: usize = 128; // 256 bits
 
 pub fn generate_salt() -> Vec<u8> {
     let mut salt = vec![0u8; 16];
-    let _ = OsRng.try_fill_bytes(&mut salt);
+    let mut rng: StdRng = rand::make_rng();
+    rng.fill_bytes(&mut salt);
     salt
 }
 
@@ -79,9 +80,6 @@ pub fn decrypt(key: &[u8], data: String, nonce: String) -> Result<String, String
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use rand::rngs::OsRng;
-    use rand::{TryRngCore};
 
     #[test]
     fn test_encrypt_decrypt_sucess() {
@@ -212,8 +210,7 @@ mod tests {
 
     #[test]
     fn test_derive_password_hash_sucess() {
-        let mut salt = vec![0u8; 16];
-        let _ = OsRng.try_fill_bytes(&mut salt);
+        let salt = generate_salt();
 
         let password_1 = "12345";
         let password_2 = "a1b2c3";
@@ -242,11 +239,9 @@ mod tests {
 
     #[test]
     fn test_derive_password_hash_failure_salts() {
-        let mut salt_1 = vec![0u8; 16];
-        let _ = OsRng.try_fill_bytes(&mut salt_1);
+        let salt_1 = generate_salt();
 
-        let mut salt_2 = vec![0u8; 16];
-        let _ = OsRng.try_fill_bytes(&mut salt_2);
+        let salt_2 = generate_salt();
 
         let password_1 = "12345";
         let password_2 = "a1b2c3";
@@ -275,8 +270,7 @@ mod tests {
 
     #[test]
     fn test_derive_password_hash_failure_password() {
-        let mut salt = vec![0u8; 16];
-        let _ = OsRng.try_fill_bytes(&mut salt);
+        let salt = generate_salt();
 
         let password_1 = "12345";
         let password_2 = "a1b2c3";
@@ -314,15 +308,15 @@ mod tests {
         let data3 = "da minha vida".to_string();
         let data4 = "Fantasy".to_string();
 
-        let result1 = simple_hash(key1.clone(), data1.clone());
-        let result2 = simple_hash(key2.clone(), data2.clone());
-        let result3 = simple_hash(key3.clone(), data3.clone());
-        let result4 = simple_hash(key4.clone(), data4.clone());
+        let result1 = simple_hash(key1, data1.clone());
+        let result2 = simple_hash(key2, data2.clone());
+        let result3 = simple_hash(key3, data3.clone());
+        let result4 = simple_hash(key4, data4.clone());
         
-        let result11 = simple_hash(key1.clone(), data1.clone());
-        let result22 = simple_hash(key2.clone(), data2.clone());
-        let result33 = simple_hash(key3.clone(), data3.clone());
-        let result44 = simple_hash(key4.clone(), data4.clone());
+        let result11 = simple_hash(key1, data1.clone());
+        let result22 = simple_hash(key2, data2.clone());
+        let result33 = simple_hash(key3, data3.clone());
+        let result44 = simple_hash(key4, data4.clone());
 
         assert_eq!(result1, result11);
         assert_eq!(result2, result22);
@@ -342,15 +336,15 @@ mod tests {
         let data3 = "da minha vida".to_string();
         let data4 = "Fantasy".to_string();
 
-        let result11 = simple_hash(key1.clone(), data1.clone());
-        let result22 = simple_hash(key2.clone(), data2.clone());
-        let result33 = simple_hash(key3.clone(), data3.clone());
-        let result44 = simple_hash(key4.clone(), data4.clone());
+        let result11 = simple_hash(key1, data1.clone());
+        let result22 = simple_hash(key2, data2.clone());
+        let result33 = simple_hash(key3, data3.clone());
+        let result44 = simple_hash(key4, data4.clone());
         
-        let result21 = simple_hash(key2.clone(), data1.clone());
-        let result32 = simple_hash(key3.clone(), data2.clone());
-        let result43 = simple_hash(key4.clone(), data3.clone());
-        let result14 = simple_hash(key1.clone(), data4.clone());
+        let result21 = simple_hash(key2, data1.clone());
+        let result32 = simple_hash(key3, data2.clone());
+        let result43 = simple_hash(key4, data3.clone());
+        let result14 = simple_hash(key1, data4.clone());
 
         assert_ne!(result11, result21);
         assert_ne!(result22, result32);

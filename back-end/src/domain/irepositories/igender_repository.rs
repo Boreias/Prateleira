@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use uuid::Uuid;
 use crate::domain::entities::gender::Gender;
 
 
@@ -7,19 +8,19 @@ pub trait IGenderRepository {
     async fn create_gender(
         &self,
         name: String,
-        user_id: i32,
-        books_ids: Option<Vec<i32>>
+        user_id: Uuid,
+        books_ids: Option<Vec<Uuid>>
     ) -> Result<(), String>;
 
-    async fn get_gender_by_id(&self, id: i32) -> Result<Gender, String>;
+    async fn get_gender_by_id(&self, id: Uuid) -> Result<Gender, String>;
 
     async fn get_gender_by_name(&self, name: String, skip: i32, page_size: i32) -> Result<Vec<Gender>, String>;
 
-    async fn get_genders_by_book(&self, book_id: i32, skip: i32, page_size: i32) -> Result<Vec<Gender>, String>;
+    async fn get_genders_by_book(&self, book_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String>;
 
-    async fn get_genders_by_author(&self, author_id: i32, skip: i32, page_size: i32) -> Result<Vec<Gender>, String>;
+    async fn get_genders_by_author(&self, author_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String>;
 
-    async fn get_genders_by_publisher(&self, publisher_id: i32, skip: i32, page_size: i32) -> Result<Vec<Gender>, String>;
+    async fn get_genders_by_publisher(&self, publisher_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String>;
 
     async fn more_popular_gender(
         &self,
@@ -35,11 +36,11 @@ pub trait IGenderRepository {
 
     async fn alter_gender(
         &mut self,
-        id: i32,
+        id: Uuid,
         name: String,
-        user_id: i32,
+        user_id: Uuid,
         books_ids: Option<Vec<i32>>
     ) -> Result<(), String>;
 
-    async fn delete_gender(&self, id: i32) -> Result<(), String>;
+    async fn delete_gender(&self, id: Uuid) -> Result<(), String>;
 }

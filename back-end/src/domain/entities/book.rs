@@ -1,4 +1,5 @@
 use serde::Serialize;
+use uuid::Uuid;
 
 use crate::domain::entities::author::Author;
 use crate::domain::entities::publisher::Publisher;
@@ -7,11 +8,11 @@ use crate::domain::entities::gender::Gender;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Book {
-    id: i32,
+    id: Uuid,
     title: String,
     subtitle: Option<String>,
     authors: Vec<Author>,
-    publisher: Publisher,
+    publisher: Option<Publisher>,
     series_collection: Option<i8>,
     volume: Option<i8>,
     edition: Option<i8>,
@@ -26,11 +27,11 @@ pub struct Book {
 
 impl Book {
     pub fn new(
-        id: i32,
+        id: Uuid,
         title: String,
         subtitle: Option<String>,
         authors: Vec<Author>,
-        publisher: Publisher,
+        publisher: Option<Publisher>,
         series_collection: Option<i8>,
         volume: Option<i8>,
         edition: Option<i8>,
@@ -61,8 +62,8 @@ impl Book {
         }
     }
 
-    pub fn get_id(&self) -> i32 {
-        self.id.clone()
+    pub fn get_id(&self) -> Uuid {
+        self.id
     }
 
     pub fn get_title(&self) -> String {
@@ -77,7 +78,7 @@ impl Book {
         self.authors.clone()
     }
 
-    pub fn get_publisher(&self) -> Publisher {
+    pub fn get_publisher(&self) -> Option<Publisher> {
         self.publisher.clone()
     }
 
@@ -133,7 +134,7 @@ impl Book {
         self.authors = new_authors;
     }
 
-    pub fn set_publisher(&mut self, new_publisher: Publisher) {
+    pub fn set_publisher(&mut self, new_publisher: Option<Publisher>) {
         self.publisher = new_publisher;
     }
 

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use uuid::Uuid;
 use sqlx::{PgPool, Row};
 
 use crate::domain::irepositories::igender_repository::IGenderRepository;
@@ -21,8 +22,8 @@ impl IGenderRepository for GenderRepository {
     async fn create_gender(
         &self,
         name: String,
-        _user_id: i32,
-        _books_ids: Option<Vec<i32>>
+        _user_id: Uuid,
+        _books_ids: Option<Vec<Uuid>>
     ) -> Result<(), String> {
         let gender_row: Option<GenderRow> = sqlx::query_as("SELECT id, name FROM gender WHERE name = $1")
             .bind(name.clone())
@@ -34,7 +35,10 @@ impl IGenderRepository for GenderRepository {
             return Err("Gênero já cadastrado".to_string())
         }
 
-        sqlx::query("INSERT INTO gender (name) VALUES ($1)")
+        let id = Uuid::new_v4();
+
+        sqlx::query("INSERT INTO gender (id, name) VALUES ($1, $2)")
+            .bind(id)
             .bind(name)
             .execute(&self.pool)
             .await
@@ -43,7 +47,7 @@ impl IGenderRepository for GenderRepository {
         Ok(())
     }
 
-    async fn get_gender_by_id(&self, id: i32) -> Result<Gender, String> {
+    async fn get_gender_by_id(&self, id: Uuid) -> Result<Gender, String> {
         let gender_row: GenderRow = sqlx::query_as("SELECT id, name FROM gender WHERE id = $1")
             .bind(id)
             .fetch_one(&self.pool)
@@ -73,7 +77,7 @@ impl IGenderRepository for GenderRepository {
         Ok(genders)
     }
 
-    async fn get_genders_by_book(&self, book_id: i32, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
+    async fn get_genders_by_book(&self, book_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
         let rows = sqlx::query("SELECT gender_id FROM book_gender WHERE book_id = $1")
             .bind(book_id)
             .fetch_all(&self.pool)
@@ -102,7 +106,7 @@ impl IGenderRepository for GenderRepository {
         Ok(genders)
     }
 
-    async fn get_genders_by_author(&self, author_id: i32, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
+    async fn get_genders_by_author(&self, author_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
         let book_rows = sqlx::query("SELECT book_id FROM book_author WHERE author_id = $1")
             .bind(author_id)
             .fetch_all(&self.pool)
@@ -141,7 +145,7 @@ impl IGenderRepository for GenderRepository {
         Ok(genders)
     }
 
-    async fn get_genders_by_publisher(&self, publisher_id: i32, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
+    async fn get_genders_by_publisher(&self, publisher_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
         let book_rows = sqlx::query("SELECT book_id FROM book_publisher WHERE publisher_id = $1")
             .bind(publisher_id)
             .fetch_all(&self.pool)
@@ -289,9 +293,9 @@ impl IGenderRepository for GenderRepository {
 
     async fn alter_gender(
         &mut self,
-        id: i32,
+        id: Uuid,
         name: String,
-        _user_id: i32,
+        _user_id: Uuid,
         _books_ids: Option<Vec<i32>>
     ) -> Result<(), String> {
         sqlx::query("UPDATE gender SET name = $2 WHERE id = $1")
@@ -304,7 +308,7 @@ impl IGenderRepository for GenderRepository {
         Ok(())
     }
 
-    async fn delete_gender(&self, id: i32) -> Result<(), String> {
+    async fn delete_gender(&self, id: Uuid) -> Result<(), String> {
         sqlx::query("DELETE FROM gender WHERE id = $1")
             .bind(id)
             .execute(&self.pool)

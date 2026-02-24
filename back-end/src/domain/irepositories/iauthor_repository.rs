@@ -1,6 +1,7 @@
 use async_trait::async_trait;
+
 use crate::domain::entities::author::Author;
-use crate::domain::entities::book::Book;
+
 
 
 #[async_trait]
@@ -10,7 +11,7 @@ pub trait IAuthorRepository {
         name: String,
         avatar: String,
         user_id: i32,
-        books_id: Option<Vec<i32>>
+        books_id: Option<Vec<i32>>,
     ) -> Result<(), String>;
 
     async fn get_author_by_id(&self, id: i32) -> Result<Author, String>;
@@ -25,13 +26,13 @@ pub trait IAuthorRepository {
         &self,
         skip: i32,
         page_size: i32
-    ) -> Result<Option<Vec<Author>>, String>; // TODO: autores com os livros mais lidos
+    ) -> Result<Option<Vec<Author>>, String>;
 
     async fn best_valuated_author(
         &self,
         skip: i32,
         page_size: i32
-    ) -> Result<Option<Vec<Author>>, String>;// TODO: autores com os livros melhor avaliados
+    ) -> Result<Option<Vec<Author>>, String>;
 
     async fn alter_author(
         &mut self,

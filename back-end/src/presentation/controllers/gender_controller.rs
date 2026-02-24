@@ -5,12 +5,13 @@ use axum::{
     Router,
     Json
 };
+use uuid::Uuid;
 use serde::Deserialize;
 use std::net::SocketAddr;
 
 use crate::domain::entities::gender::Gender;
 use crate::application::services::gender_service::GenderService;
-use crate::app_state::AppState;
+use crate::infrastructure::app_state::AppState;
 
 
 
@@ -32,8 +33,8 @@ pub fn gender_routes() -> Router<AppState> {
 #[derive(Deserialize)]
 struct CreateGenderResquest {
     name: String,
-    user_id: i32,
-    books_ids: Option<Vec<i32>>
+    user_id: Uuid,
+    books_ids: Option<Vec<Uuid>>
 }
 
 async fn create_gender(
@@ -52,7 +53,7 @@ async fn create_gender(
 
 #[derive(Deserialize)]
 struct GetGenderByIdRequest {
-    id: i32
+    id: Uuid
 }
 
 async fn get_gender_by_id(
@@ -72,8 +73,8 @@ async fn get_gender_by_id(
 #[derive(Deserialize)]
 struct GetGenderByNameRequest {
     name: String,
-    skip: i32,
-    page_size: i32
+    skip: Option<i32>,
+    page_size: Option<i32>
 }
 
 async fn get_gender_by_name (
@@ -91,9 +92,9 @@ async fn get_gender_by_name (
 
 #[derive(Deserialize)]
 struct GetGenderByBookRequest {
-    book_id: i32,
-    skip: i32,
-    page_size: i32
+    book_id: Uuid,
+    skip: Option<i32>,
+    page_size: Option<i32>
 }
 
 async fn get_genders_by_book (
@@ -112,9 +113,9 @@ async fn get_genders_by_book (
 
 #[derive(Deserialize)]
 struct GetGenderByAuthorRequest {
-    author_id: i32,
-    skip: i32,
-    page_size: i32
+    author_id: Uuid,
+    skip: Option<i32>,
+    page_size: Option<i32>
 }
 
 async fn get_genders_by_author (
@@ -133,9 +134,9 @@ async fn get_genders_by_author (
 
 #[derive(Deserialize)]
 struct GetGenderByPublisherRequest {
-    publisher_id: i32,
-    skip: i32,
-    page_size: i32
+    publisher_id: Uuid,
+    skip: Option<i32>,
+    page_size: Option<i32>
 }
 
 async fn get_genders_by_publisher (
@@ -154,8 +155,8 @@ async fn get_genders_by_publisher (
 
 #[derive(Deserialize)]
 struct GetPaginetedRequest {
-    skip: i32,
-    page_size: i32
+    skip: Option<i32>,
+    page_size: Option<i32>
 }
 
 async fn more_popular_gender (
@@ -187,9 +188,9 @@ async fn best_valuated_gender (
 
 #[derive(Deserialize)]
 struct AlterGenderRequest {
-    id: i32,
+    id: Uuid,
     name: String,
-    user_id: i32,
+    user_id: Uuid,
     books_ids: Option<Vec<i32>>
 }
 
@@ -209,18 +210,18 @@ async fn alter_gender (
 
 #[derive(Deserialize)]
 struct DeleteGenderRequest {
-    id: i32
+    id: Uuid
 }
 
 async fn delete_gender (
     ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
-    Json(payload): Json<DeleteGenderRequest>
+    Query(payload): Query<DeleteGenderRequest>
 ) -> Result<(StatusCode, String), (StatusCode, String)> {
     let service = GenderService::new((*state.db_pool).clone());
 
     match service.delete_gender(payload.id).await {
-        Ok(_) => return Ok((StatusCode::OK, "Gênero atualizado com sucesso".to_string())),
+        Ok(_) => return Ok((StatusCode::OK, "Gênero excluído com sucesso".to_string())),
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e))
     }
 }

@@ -1,8 +1,9 @@
 use sqlx::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, FromRow)]
 pub struct BookRow {
-    pub id: i32,
+    pub id: Uuid,
     pub title: String,
     pub subtitle: Option<String>,
     pub series_collection: Option<i8>,
