@@ -1,13 +1,13 @@
 CREATE DATABASE Prateleira;
 
 CREATE TABLE author (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     avatar BYTEA
 );
 
 CREATE TABLE publisher (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     site VARCHAR(255),
     email VARCHAR(255),
@@ -15,18 +15,18 @@ CREATE TABLE publisher (
 );
 
 CREATE TABLE gender (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE gender_created_at (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     gender_id SERIAL NOT NULL REFERENCES gender(id),
     user_id SERIAL NOT NULL REFERENCES user(id)
 );
 
 CREATE TABLE book_publisher (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id SERIAL NOT NULL REFERENCES book(id),
     publisher_id SERIAL NOT NULL REFERENCES publisher(id)
 );
@@ -45,7 +45,7 @@ CREATE TABLE book_publisher (
 -- );
 
 CREATE TABLE user (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id SERIAL NOT NULL,
     field_name VARCHAR(255) NOT NULL,
     encryp_value BYTEA NOT NULL,
@@ -54,21 +54,21 @@ CREATE TABLE user (
 );
 
 CREATE TABLE search_index (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id SERIAL NOT NULL REFERENCES User(user_id),
     field_name VARCHAR(255) NOT NULL,
     index_value BYTEA NOT NULL
 );
 
 CREATE TABLE user_password (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id SERIAL NOT NULL REFERENCES User(user_id),
     password_hash BYTEA NOT NULL,
     salt BYTEA NOT NULL
 );
 
 CREATE TABLE substring_index (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id SERIAL NOT NULL REFERENCES User(user_id),
     field_name VARCHAR(255) NOT NULL,
     token BYTEA    -- SHA256(K || token)
@@ -76,7 +76,7 @@ CREATE TABLE substring_index (
 
 
 CREATE TABLE book (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL,
     subtitle VARCHAR(255),
     publisher SERIAL NOT NULL REFERENCES Publisher(id),
@@ -92,24 +92,24 @@ CREATE TABLE book (
 );
 
 CREATE TABLE book_author(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id SERIAL NOT NULL REFERENCES Book(id),
     author_id SERIAL NOT NULL REFERENCES Author(id)
 );
 
 CREATE TABLE book_gender(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id SERIAL NOT NULL REFERENCES Book(id),
     gender_id SERIAL NOT NULL REFERENCES Gender(id)
 );
 
 CREATE TABLE reading_status(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL
 )
 
 CREATE TABLE book_user(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id SERIAL NOT NULL REFERENCES book(id),
     user_id SERIAL NOT NULL REFERENCES user(id),
     have BOOLEAN,
@@ -123,21 +123,21 @@ CREATE TABLE book_user(
 );
 
 CREATE TABLE book_review(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id SERIAL NOT NULL REFERENCES book(id),
     user_id SERIAL NOT NULL REFERENCES user(id),
     review INTEGER NOT NULL
 );
 
 CREATE TABLE user_friend_request(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     requesting_user_id SERIAL NOT NULL REFERENCES User(id),
     user_requested_id SERIAL NOT NULL REFERENCES User(id),
     date_request DATE NOT NULL DEFAULT CURRENT_DATE
 );
 
 CREATE TABLE user_friendship(
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     requesting_user_id SERIAL NOT NULL REFERENCES User(id),
     user_requested_id SERIAL NOT NULL REFERENCES User(id),
     friendship_date DATE NOT NULL DEFAULT CURRENT_DATE

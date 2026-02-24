@@ -1,11 +1,12 @@
 use serde::Serialize;
+use uuid::Uuid;
 
 use crate::domain::entities::book::Book;
 
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Author {
-    id: i32,
+    id: Uuid,
     pub name: String,
     pub avatar: String,
     pub books: Option<Vec<Book>>
@@ -13,7 +14,7 @@ pub struct Author {
 
 
 impl Author {
-    pub fn new(id: i32, name: String, avatar: String, books: Option<Vec<Book>>) -> Author {
+    pub fn new(id: Uuid, name: String, avatar: String, books: Option<Vec<Book>>) -> Author {
         Author {
             id,
             name,
@@ -22,7 +23,7 @@ impl Author {
         }
     }
 
-    pub fn get_id(&self) -> i32 {
+    pub fn get_id(&self) -> Uuid {
         self.id
     }
 

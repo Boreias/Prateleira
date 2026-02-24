@@ -1,19 +1,21 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
+use uuid::Uuid;
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Gender {
-    id: i32,
+    id: Uuid,
     name: String
 }
 
 
 impl Gender {
-    pub fn new(id: i32, name: String) -> Gender {
+    pub fn new(id: Uuid, name: String) -> Gender {
         Gender { id, name }
     }
 
-    pub fn get_id(&self) -> i32 {
-        self.id.clone()
+    pub fn get_id(&self) -> Uuid {
+        self.id
     }
 
     pub fn get_name(&self) -> String {

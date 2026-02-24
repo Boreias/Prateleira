@@ -1,11 +1,12 @@
 use serde::Serialize;
+use uuid::Uuid;
 
 use crate::domain::entities::book::Book;
 
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Publisher {
-    id: i32,
+    id: Uuid,
     name: String,
     site: Option<String>,
     email: Option<String>,
@@ -16,7 +17,7 @@ pub struct Publisher {
 
 impl Publisher {
     pub fn new(
-        id: i32,
+        id: Uuid,
         name: String,
         site: Option<String>,
         email: Option<String>,
@@ -33,7 +34,7 @@ impl Publisher {
         }
     }
 
-    pub fn get_id(&self) -> i32 {
+    pub fn get_id(&self) -> Uuid {
         self.id
     }
 

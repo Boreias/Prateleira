@@ -69,7 +69,7 @@ pub fn user_routes() -> Router<AppState> {
 }
 
 pub async fn register_user(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Json(payload): Json<RegisterUserRequest>
 ) -> impl IntoResponse {
@@ -88,7 +88,7 @@ pub async fn register_user(
 }
 
 pub async fn find_user_by_id(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Json(payload): Json<FindUserByIdRequest>
 ) -> impl IntoResponse {
@@ -105,7 +105,7 @@ pub async fn find_user_by_id(
 }
 
 pub async fn find_user_by_email(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Json(payload): Json<FindUserByEmailRequest>
 ) -> impl IntoResponse {
@@ -121,7 +121,7 @@ pub async fn find_user_by_email(
 }
 
 pub async fn find_user_by_nickname(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Json(payload): Json<FindUserByNicknameRequest>
 ) -> impl IntoResponse {
@@ -137,7 +137,7 @@ pub async fn find_user_by_nickname(
 }
 
 pub async fn update_user(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Json(payload): Json<AlterUserRequest>
 ) -> impl IntoResponse {
@@ -150,7 +150,7 @@ pub async fn update_user(
 }
 
 pub async fn remove_user(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Json(payload): Json<DeleteUserRequest>
 ) -> impl IntoResponse {

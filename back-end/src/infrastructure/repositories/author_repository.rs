@@ -29,7 +29,8 @@ impl IAuthorRepository for AuthorRepository {
         &self,
         name: String,
         avatar: String,
-        books: Option<Vec<Book>>
+        _user_id: i32,
+        _books: Option<Vec<i32>>,
     ) -> Result<(), String> {
         let result = sqlx::query("INSERT INTO author (name, avatar) VALUES ($1, $2)")
             .bind(name)
@@ -41,9 +42,23 @@ impl IAuthorRepository for AuthorRepository {
         Ok(())
     }
 
-    async fn get_author_by_name(&self, name: String) -> Result<Option<Vec<Author>>, String> {
-        let rows = sqlx::query("SELECT id, name, avatar FROM author WHERE name = $1")
+    async fn get_author_by_id(&self, id: i32) -> Result<Author, String> {
+        let author_row: AuthorRow = sqlx::query_as("SELECT id, name FROM author WHERE id = $1")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let author: Author = author_row.into();
+
+        Ok(author)
+    }
+
+    async fn get_author_by_name(&self, name: String, skip: i32, page_size: i32) -> Result<Option<Vec<Author>>, String> {
+        let rows = sqlx::query("SELECT id, name, avatar FROM author WHERE name = $1 LIMIT $2 OFFSET $3")
             .bind(name)
+            .bind(page_size)
+            .bind(skip)
             .fetch_all(&self.pool)
             .await
             .map_err(|e| e.to_string())?;

@@ -1,8 +1,10 @@
 use sqlx::FromRow;
+use uuid::Uuid;
+
 
 #[derive(Debug, FromRow)]
 pub struct AuthorRow {
-    pub id: i32,
+    pub id: Uuid,
     pub name: String,
     pub avatar: String,
 }

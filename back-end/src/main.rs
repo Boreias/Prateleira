@@ -1,24 +1,14 @@
-use axum::Router;
 use std::{
     net::SocketAddr,
     sync::Arc
 };
+use tokio::net::TcpListener;
 use std::env;
 use dotenv::dotenv;
 
-mod app_state;
-use app_state::AppState;
-
-
-mod infrastructure;
-mod application;
-mod presentation;
-mod domain;
-
-use infrastructure::db::connection::create_pool;
-use presentation::controllers::user_controller::user_routes;
-use presentation::controllers::author_controller::author_routes;
-use presentation::controllers::gender_controller::gender_routes;
+use back_end::infrastructure::app_state::AppState;
+use back_end::infrastructure::db::connection::create_pool;
+use back_end::presentation::routes::create_app;
 
 
 
@@ -35,13 +25,10 @@ async fn main() {
         db_pool: Arc::new(pool)
     };
 
-    let app = Router::new()
-        .nest("/user", user_routes())
-        .nest("/author", author_routes())
-        .nest("/gender", gender_routes())
-        .with_state(state);
+    let app = create_app(state);
 
     let addr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    let listener = TcpListener::bind(addr).await.unwrap();
+    
     axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.unwrap();
 }
