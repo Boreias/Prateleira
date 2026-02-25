@@ -41,7 +41,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_check_gender_table() {
-        // Confere existência das tabelas
         dotenv().ok();
         let database_url = env::var("DATABASE_URL")
             .expect("Variável de ambiente DATABASE_URL não definida");
@@ -55,6 +54,23 @@ mod tests {
         );").fetch_one(&pool).await.unwrap();
 
         assert!(gender.0);
+    }
+
+    #[tokio::test]
+    async fn test_check_author_table() {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL")
+            .expect("Variável de ambiente DATABASE_URL não definida");
+        let pool = create_pool(&database_url).await;
+
+        let table: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'author'
+        );").fetch_one(&pool).await.unwrap();
+
+        assert!(table.0);
     }
 
     // #[tokio::test]
@@ -124,24 +140,6 @@ mod tests {
     //         FROM information_schema.tables 
     //         WHERE table_schema = 'public' 
     //         AND table_name = 'substring_index'
-    //     );").fetch_one(&pool).await.unwrap();
-
-    //     assert!(table_result.0);
-    // }
-
-    // #[tokio::test]
-    // async fn test_check_author_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
-
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'author'
     //     );").fetch_one(&pool).await.unwrap();
 
     //     assert!(table_result.0);

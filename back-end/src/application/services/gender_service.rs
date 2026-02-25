@@ -67,12 +67,16 @@ impl GenderService {
         id: Uuid,
         name: String,
         user_id: Uuid,
-        books_ids: Option<Vec<i32>>
+        books_ids: Option<Vec<Uuid>>
     ) -> Result<(), String> {
         self.repository.alter_gender(id, name, user_id, books_ids).await
     }
 
-    pub async fn delete_gender(&self, id: Uuid) -> Result<(), String> {
-        self.repository.delete_gender(id).await
+    pub async fn delete_gender(&self, id: Uuid, user_id: Uuid) -> Result<(), String> {
+        self.repository.delete_gender(id, user_id).await
+    }
+
+    pub async fn clear_deleted_genders(&self) -> Result<(), String> {
+        self.repository.clear_deleted_genders().await
     }
 }

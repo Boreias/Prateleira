@@ -4,8 +4,12 @@ use sqlx::{PgPool, Row};
 
 use crate::domain::irepositories::igender_repository::IGenderRepository;
 use crate::infrastructure::db::models::gender_row::GenderRow;
+use crate::infrastructure::db::models::book_author_row::BookAuthorRow;
+use crate::infrastructure::db::models::book_publisher_row::BookPublisherRow;
+use crate::infrastructure::db::models::book_gender_row::BookGenderRow;
 use crate::infrastructure::enums::reading_status::ReadingStatus;
 use crate::domain::entities::gender::Gender;
+
 
 pub struct GenderRepository {
     pool: PgPool
@@ -25,7 +29,15 @@ impl IGenderRepository for GenderRepository {
         _user_id: Uuid,
         _books_ids: Option<Vec<Uuid>>
     ) -> Result<(), String> {
-        let gender_row: Option<GenderRow> = sqlx::query_as("SELECT id, name FROM gender WHERE name = $1")
+        let gender_row: Option<GenderRow> = sqlx::query_as(r#"
+            SELECT
+                id, name
+            FROM
+                gender
+            WHERE
+                name = $1
+            "#
+        )
             .bind(name.clone())
             .fetch_optional(&self.pool)
             .await
@@ -37,7 +49,13 @@ impl IGenderRepository for GenderRepository {
 
         let id = Uuid::new_v4();
 
-        sqlx::query("INSERT INTO gender (id, name) VALUES ($1, $2)")
+        sqlx::query(r#"
+            INSERT INTO
+                gender (id, name)
+            VALUES
+                ($1, $2)
+            "#
+        )
             .bind(id)
             .bind(name)
             .execute(&self.pool)
@@ -48,7 +66,15 @@ impl IGenderRepository for GenderRepository {
     }
 
     async fn get_gender_by_id(&self, id: Uuid) -> Result<Gender, String> {
-        let gender_row: GenderRow = sqlx::query_as("SELECT id, name FROM gender WHERE id = $1")
+        let gender_row: GenderRow = sqlx::query_as(r#"
+            SELECT
+                id, name
+            FROM
+                gender
+            WHERE
+                id = $1 AND deleted = false
+            "#
+        )
             .bind(id)
             .fetch_one(&self.pool)
             .await
@@ -60,7 +86,17 @@ impl IGenderRepository for GenderRepository {
     }
 
     async fn get_gender_by_name(&self, name: String, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
-        let gender_rows: Vec<GenderRow> = sqlx::query_as("SELECT id, name FROM gender WHERE name = $1 LIMIT $2 OFFSET $3")
+        let gender_rows: Vec<GenderRow> = sqlx::query_as(r#"
+            SELECT
+                id, name
+            FROM
+                gender
+            WHERE
+                name = $1 AND deleted = false
+            LIMIT $2
+            OFFSET $3
+            "#
+        )
             .bind(name)
             .bind(page_size)
             .bind(skip)
@@ -78,7 +114,15 @@ impl IGenderRepository for GenderRepository {
     }
 
     async fn get_genders_by_book(&self, book_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
-        let rows = sqlx::query("SELECT gender_id FROM book_gender WHERE book_id = $1")
+        let rows: Vec<BookGenderRow> = sqlx::query_as(r#"
+            SELECT
+                gender_id
+            FROM
+                book_gender
+            WHERE
+                book_id = $1
+            "#
+        )
             .bind(book_id)
             .fetch_all(&self.pool)
             .await
@@ -88,9 +132,19 @@ impl IGenderRepository for GenderRepository {
 
         for row in rows {
 
-            let id: i32 = row.get("gender_id");
+            let id = row.gender_id;
 
-            let gender_row: GenderRow = sqlx::query_as("SELECT id, name FROM gender WHERE id = $1 LIMIT $2 OFFSET $3")
+            let gender_row: GenderRow = sqlx::query_as(r#"
+                SELECT
+                    id, name
+                FROM
+                    gender
+                WHERE
+                    id = $1 AND deleted = false
+                LIMIT $2
+                OFFSET $3
+                "#
+            )
                 .bind(id)
                 .bind(page_size)
                 .bind(skip)
@@ -107,7 +161,14 @@ impl IGenderRepository for GenderRepository {
     }
 
     async fn get_genders_by_author(&self, author_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
-        let book_rows = sqlx::query("SELECT book_id FROM book_author WHERE author_id = $1")
+        let book_rows: Vec<BookAuthorRow> = sqlx::query_as(r#"
+            SELECT
+                book_id
+            FROM
+                book_author
+            WHERE author_id = $1
+            "#
+        )
             .bind(author_id)
             .fetch_all(&self.pool)
             .await
@@ -117,18 +178,36 @@ impl IGenderRepository for GenderRepository {
 
         for book_row in book_rows {
 
-            let book_id: i32 = book_row.get("book_id");
+            let book_id = book_row.book_id;
 
-            let gender_rows = sqlx::query("SELECT gender_id FROM book_gender WHERE book_id = $1")
+            let gender_rows: Vec<BookGenderRow> = sqlx::query_as(r#"
+                SELECT
+                    gender_id
+                FROM
+                    book_gender
+                WHERE
+                    book_id = $1
+                "#
+            )
                 .bind(book_id)
                 .fetch_all(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
 
             for row in gender_rows {
-                let id: i32 = row.get("gender_id");
+                let id = row.gender_id;
 
-                let gender_row: GenderRow = sqlx::query_as("SELECT id, name FROM gender WHERE id = $1 LIMIT $2 OFFSET $3")
+                let gender_row: GenderRow = sqlx::query_as(r#"
+                    SELECT
+                        id, name
+                    FROM
+                        gender
+                    WHERE
+                        id = $1 AND deleted = false
+                    LIMIT $2
+                    OFFSET $3
+                    "#
+                )
                     .bind(id)
                     .bind(page_size)
                     .bind(skip)
@@ -146,7 +225,15 @@ impl IGenderRepository for GenderRepository {
     }
 
     async fn get_genders_by_publisher(&self, publisher_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
-        let book_rows = sqlx::query("SELECT book_id FROM book_publisher WHERE publisher_id = $1")
+        let book_publisher_rows: Vec<BookPublisherRow> = sqlx::query_as(r#"
+            SELECT
+                book_id
+            FROM
+                book_publisher
+            WHERE
+                publisher_id = $1
+            "#
+        )
             .bind(publisher_id)
             .fetch_all(&self.pool)
             .await
@@ -154,20 +241,37 @@ impl IGenderRepository for GenderRepository {
 
         let mut genders: Vec<Gender> = Vec::new();
 
-        for book_row in book_rows {
+        for book_publisher_row in book_publisher_rows {
 
-            let book_id: i32 = book_row.get("book_id");
+            let book_id = book_publisher_row.book_id;
 
-            let gender_rows = sqlx::query("SELECT gender_id FROM book_gender WHERE book_id = $1")
+            let gender_rows: Vec<BookGenderRow> = sqlx::query_as(r#"
+                SELECT
+                    gender_id
+                FROM
+                    book_gender
+                WHERE
+                    book_id = $1
+                "#
+            )
                 .bind(book_id)
                 .fetch_all(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
 
             for row in gender_rows {
-                let id: i32 = row.get("gender_id");
+                let id = row.gender_id;
 
-                let gender_row: GenderRow = sqlx::query_as("SELECT id, name FROM gender WHERE id = $1 LIMIT $2 OFFSET $3")
+                let gender_row: GenderRow = sqlx::query_as(r#"
+                    SELECT
+                        id, name
+                    FROM
+                        gender
+                    WHERE id = $1 AND deleted = false
+                    LIMIT $2
+                    OFFSET $3
+                    "#
+                )
                     .bind(id)
                     .bind(page_size)
                     .bind(skip)
@@ -190,16 +294,17 @@ impl IGenderRepository for GenderRepository {
         page_size: i32
     ) -> Result<Vec<Gender>, String> {
         let book_rows = sqlx::query(r#"
-        SELECT
-            book_id,
-            COUNT(user_id) as readed_book
-        FROM book_user
-        WHERE reading_status = $1
-        GROUP BY book_id
-        ORDER BY readed_book DESC
-        LIMIT $2
-        OFFSET $3
-        "#)
+            SELECT
+                book_id,
+                COUNT(user_id) as readed_book
+            FROM book_user
+            WHERE reading_status = $1
+            GROUP BY book_id
+            ORDER BY readed_book DESC
+            LIMIT $2
+            OFFSET $3
+            "#
+        )
             .bind(ReadingStatus::Lido as i32)
             .bind(page_size)
             .bind(skip)
@@ -210,15 +315,16 @@ impl IGenderRepository for GenderRepository {
         let mut genders: Vec<Gender> = Vec::new();
 
         for book in book_rows {
-            let book_id: i32 = book.get("book_id");
+            let book_id: Uuid = book.get("book_id");
             let genders_book = sqlx::query(r#"
-            SELECT
-                gender_id
-            FROM book_gender
-            WHERE book_id = $1
-            LIMIT $2
-            OFFSET $3
-            "#)
+                SELECT
+                    gender_id
+                FROM book_gender
+                WHERE book_id = $1
+                LIMIT $2
+                OFFSET $3
+                "#
+            )
             .bind(book_id)
             .bind(page_size)
             .bind(skip)
@@ -226,20 +332,21 @@ impl IGenderRepository for GenderRepository {
             .await
             .map_err(|e| e.to_string())?;
 
-            let genders_id: Vec<i32> = genders_book.iter().map(|row| {
+            let genders_id: Vec<Uuid> = genders_book.iter().map(|row| {
                 row.get("id")
             }).collect();
 
             let param = format!("?{}", ", ?".repeat(genders_id.len()-1));
 
             let gender_rows: Vec<GenderRow> = sqlx::query_as(r#"
-            SELECT
-                id, name
-            FROM gender
-            WHERE id IN ($1)
-            LIMIT $2
-            OFFSET $3
-            "#)
+                SELECT
+                    id, name
+                FROM gender
+                WHERE id IN ($1) AND deleted = false
+                LIMIT $2
+                OFFSET $3
+            "#
+        )
             .bind(param)
             .bind(page_size)
             .bind(skip)
@@ -253,7 +360,6 @@ impl IGenderRepository for GenderRepository {
             }
         }
 
-
         Ok(genders)
     }
 
@@ -263,19 +369,21 @@ impl IGenderRepository for GenderRepository {
         page_size: i32
     ) -> Result<Vec<Gender>, String> {
         let gender_rows = sqlx::query(r#"
-        SELECT
-            g.id,
-            g.name,
-            AVG(br.review)::float8 AS genre_average,
-            COUNT(br.review) AS total_reviews
-        FROM genre g
-        JOIN book b ON b.genre_id = g.id
-        JOIN book_review br ON br.book_id = b.id
-        GROUP BY g.id, g.name
-        ORDER BY genre_average DESC
-        LIMIT $1
-        OFFSET $2
-        "#)
+            SELECT
+                g.id,
+                g.name,
+                AVG(br.review)::float8 AS genre_average,
+                COUNT(br.review) AS total_reviews
+            FROM genre g
+            WHERE g.deleted = false
+            JOIN book b ON b.genre_id = g.id
+            JOIN book_review br ON br.book_id = b.id
+            GROUP BY g.id, g.name
+            ORDER BY genre_average DESC
+            LIMIT $1
+            OFFSET $2
+            "#
+        )
             .bind(page_size)
             .bind(skip)
             .fetch_all(&self.pool)
@@ -296,9 +404,17 @@ impl IGenderRepository for GenderRepository {
         id: Uuid,
         name: String,
         _user_id: Uuid,
-        _books_ids: Option<Vec<i32>>
+        _books_ids: Option<Vec<Uuid>>
     ) -> Result<(), String> {
-        sqlx::query("UPDATE gender SET name = $2 WHERE id = $1")
+        sqlx::query(r#"
+            UPDATE
+                gender
+            SET
+                name = $2
+            WHERE
+                id = $1
+            "#
+        )
             .bind(id)
             .bind(name)
             .execute(&self.pool)
@@ -308,9 +424,32 @@ impl IGenderRepository for GenderRepository {
         Ok(())
     }
 
-    async fn delete_gender(&self, id: Uuid) -> Result<(), String> {
-        sqlx::query("DELETE FROM gender WHERE id = $1")
+    async fn delete_gender(&self, id: Uuid, _user_id: Uuid) -> Result<(), String> {
+        sqlx::query(r#"
+            UPDATE
+                gender
+            SET
+                deleted = true
+            WHERE
+                id = $1
+            "#
+        )
             .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    async fn clear_deleted_genders(&self) -> Result<(), String> {
+        sqlx::query(r#"
+            DELETE FROM
+                gender
+            WHERE
+                deleted = true
+            "#
+        )
             .execute(&self.pool)
             .await
             .map_err(|e| e.to_string())?;

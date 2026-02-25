@@ -39,8 +39,10 @@ pub trait IGenderRepository {
         id: Uuid,
         name: String,
         user_id: Uuid,
-        books_ids: Option<Vec<i32>>
+        books_ids: Option<Vec<Uuid>>
     ) -> Result<(), String>;
 
-    async fn delete_gender(&self, id: Uuid) -> Result<(), String>;
+    async fn delete_gender(&self, id: Uuid, user_id: Uuid) -> Result<(), String>;
+
+    async fn clear_deleted_genders(&self) -> Result<(), String>;
 }

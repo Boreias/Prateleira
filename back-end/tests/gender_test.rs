@@ -237,11 +237,27 @@ async fn test_complete_gender_flux() {
 
     // --------------------------- Deletando gênero ---------------------------
 
-    let uri = format!("/gender/delete?id={}", book_id);
+    let uri = format!("/gender/delete?id={}&user_id={}", book_id, user_id);
 
     let mut request = Request::builder()
         .uri(&uri)
         .method("DELETE")
+        .body(Body::empty())
+        .unwrap();
+
+    request.extensions_mut().insert(
+        ConnectInfo(SocketAddr::from(([127,0,0,1], 3000)))
+    );
+
+    let response = app.clone().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    // --------------------------- Limpando registros deletados da tabela de gênero ---------------------------
+
+    let mut request = Request::builder()
+        .uri("/gender/clear_deleted")
+        .method("GET")
         .body(Body::empty())
         .unwrap();
 
