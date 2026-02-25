@@ -27,6 +27,7 @@ pub fn gender_routes() -> Router<AppState> {
         .route("/best_valuated", get(best_valuated_gender))
         .route("/alter", put(alter_gender))
         .route("/delete", delete(delete_gender))
+        .route("/clear_deleted", get(clear_deleted_genders))
 }
 
 
@@ -191,7 +192,7 @@ struct AlterGenderRequest {
     id: Uuid,
     name: String,
     user_id: Uuid,
-    books_ids: Option<Vec<i32>>
+    books_ids: Option<Vec<Uuid>>
 }
 
 async fn alter_gender (
@@ -210,7 +211,8 @@ async fn alter_gender (
 
 #[derive(Deserialize)]
 struct DeleteGenderRequest {
-    id: Uuid
+    id: Uuid,
+    user_id: Uuid
 }
 
 async fn delete_gender (
@@ -220,8 +222,21 @@ async fn delete_gender (
 ) -> Result<(StatusCode, String), (StatusCode, String)> {
     let service = GenderService::new((*state.db_pool).clone());
 
-    match service.delete_gender(payload.id).await {
+    match service.delete_gender(payload.id, payload.user_id).await {
         Ok(_) => return Ok((StatusCode::OK, "Gênero excluído com sucesso".to_string())),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e))
+    }
+}
+
+
+async fn clear_deleted_genders (
+    ConnectInfo(_addr): ConnectInfo<SocketAddr>,
+    State(state): State<AppState>,
+) -> Result<(StatusCode, String), (StatusCode, String)> {
+    let service = GenderService::new((*state.db_pool).clone());
+
+    match service.clear_deleted_genders().await {
+        Ok(_) => return Ok((StatusCode::OK, "Gêneros excluídos foram removidos do banco com sucesso".to_string())),
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e))
     }
 }

@@ -3,7 +3,8 @@ CREATE DATABASE Prateleira;
 CREATE TABLE author (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
-    avatar BYTEA
+    avatar BYTEA,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE publisher (
@@ -16,7 +17,8 @@ CREATE TABLE publisher (
 
 CREATE TABLE gender (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) UNIQUE NOT NULL
+    name VARCHAR(255) UNIQUE NOT NULL,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE gender_created_at (
@@ -93,8 +95,8 @@ CREATE TABLE book (
 
 CREATE TABLE book_author(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    book_id SERIAL NOT NULL REFERENCES Book(id),
-    author_id SERIAL NOT NULL REFERENCES Author(id)
+    book_id UUID NOT NULL REFERENCES Book(id),
+    author_id UUID NOT NULL REFERENCES Author(id)
 );
 
 CREATE TABLE book_gender(

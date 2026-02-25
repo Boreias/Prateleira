@@ -1,15 +1,17 @@
 use axum::{
-    extract::{Json, State, ConnectInfo},
-    response::{IntoResponse, Json as JsonResponse},
+    extract::{State, ConnectInfo, Query},
     http::StatusCode,
     routing::{get, post, put, delete},
-    Router
+    Router,
+    Json
 };
-use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+use serde::Deserialize;
 use std::net::SocketAddr;
 
+use crate::domain::entities::author::Author;
 use crate::application::services::author_service::AuthorService;
-use crate::app_state::AppState;
+use crate::infrastructure::app_state::AppState;
 
 
 pub fn author_routes() -> Router<AppState> {
