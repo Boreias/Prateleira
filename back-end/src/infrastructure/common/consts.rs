@@ -1,0 +1,1 @@
+pub const UPLOADS_IMAGE_PATH: &str = "infrastructure/uploads/images";

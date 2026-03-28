@@ -1,5 +1,6 @@
 use uuid::Uuid;
 use async_trait::async_trait;
+use axum::body::Bytes;
 
 use crate::domain::entities::author::Author;
 
@@ -10,9 +11,10 @@ pub trait IAuthorRepository {
     async fn create_author(
         &self,
         name: String,
-        avatar: String,
         user_id: Uuid,
-        books_id: Option<Vec<Uuid>>,
+        file_name: Option<String>,
+        file_content: Option<Bytes>,
+        books: Option<Vec<Uuid>>,
     ) -> Result<(), String>;
 
     async fn get_author_by_id(&self, id: Uuid) -> Result<Author, String>;
@@ -41,9 +43,10 @@ pub trait IAuthorRepository {
         &mut self,
         id: Uuid,
         name: String,
-        avatar: String,
         user_id: Uuid,
-        books_id: Option<Vec<Uuid>>
+        file_name: Option<String>,
+        file_content: Option<Bytes>,
+        books: Option<Vec<Uuid>>
     ) -> Result<(), String>;
 
     async fn delete_author(&self, id: Uuid, user_id: Uuid) -> Result<(), String>;

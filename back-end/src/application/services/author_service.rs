@@ -1,5 +1,6 @@
 use sqlx::PgPool;
 use uuid::Uuid;
+use axum::body::Bytes;
 
 use crate::domain::entities::author::Author;
 use crate::domain::irepositories::iauthor_repository::IAuthorRepository;
@@ -20,11 +21,12 @@ impl AuthorService {
     pub async fn create_author(
         &self,
         name: String,
-        avatar: String,
         user_id: Uuid,
-        books: Option<Vec<Uuid>>,
+        file_name: Option<String>,
+        file_content: Option<Bytes>,
+        books: Option<Vec<Uuid>>
     ) -> Result<(), String> {
-        self.repository.create_author(name, avatar, user_id, books).await
+        self.repository.create_author(name, user_id, file_name, file_content, books).await
     }
 
     pub async fn get_author_by_id(&self, id: Uuid) -> Result<Author, String> {
@@ -59,11 +61,12 @@ impl AuthorService {
         &mut self,
         id: Uuid,
         name: String,
-        avatar: String,
         user_id: Uuid,
+        file_name: Option<String>,
+        file_content: Option<Bytes>,
         books: Option<Vec<Uuid>>
     ) -> Result<(), String> {
-        self.repository.alter_author(id, name, avatar, user_id, books).await
+        self.repository.alter_author(id, name, user_id, file_name, file_content, books).await
     }
 
     pub async fn delete_author(&self, id: Uuid, user_id: Uuid) -> Result<(), String> {

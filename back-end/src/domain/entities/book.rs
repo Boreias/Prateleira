@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 
 use crate::domain::entities::author::Author;
@@ -6,7 +6,7 @@ use crate::domain::entities::publisher::Publisher;
 use crate::domain::entities::gender::Gender;
 
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Book {
     id: Uuid,
     title: String,

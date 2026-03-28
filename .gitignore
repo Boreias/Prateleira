@@ -1,44 +1,33 @@
 # ----------------- Back-end ----------------- 
 /back-end/target/
 .env
-
+/back-end/tests/images/author/*
+/back-end/tests/images/publisher/*
 
 # ----------------- Front-end -----------------
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
 node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/front-end/.svelte-kit
+/front-end/build
+
+# OS
 .DS_Store
-dist
-dist-ssr
-coverage
-*.local
+Thumbs.db
 
-# Editor directories and files
-.vscode
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
 
-*.tsbuildinfo
-
-.eslintcache
-
-# Cypress
-/cypress/videos/
-/cypress/screenshots/
-
-# Vitest
-__screenshots__/
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
 
 
 # ----------------- Antigo front em React (remover depois) ----------------- 

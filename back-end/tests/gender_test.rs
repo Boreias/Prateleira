@@ -25,7 +25,7 @@ use back_end::domain::entities::gender::Gender;
 async fn test_get_gender_by_id_success() {
     dotenv().ok();
 
-    let database_url = std::env::var("DATABASE_URL").unwrap();
+    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
     let pool = create_pool(&database_url).await;
 
     let state = AppState {
@@ -35,7 +35,7 @@ async fn test_get_gender_by_id_success() {
     let app = create_app(state);
 
     let mut request = Request::builder()
-        .uri("/gender/id?id=05fa66f8-808e-448d-8ead-1418ef580153")
+        .uri("/gender/id?id=ae7df38c-8328-4077-ad2c-9670f11a9aad")
         .method("GET")
         .body(Body::empty())
         .unwrap();
@@ -47,13 +47,18 @@ async fn test_get_gender_by_id_success() {
     let response = app.oneshot(request).await.unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Gender = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body.get_name(), "Fantasia".to_string());
 }
 
 #[tokio::test]
 async fn test_get_gender_by_id_failure() {
     dotenv().ok();
 
-    let database_url = std::env::var("DATABASE_URL").unwrap();
+    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
     let pool = create_pool(&database_url).await;
 
     let state = AppState {
@@ -81,7 +86,7 @@ async fn test_get_gender_by_id_failure() {
 async fn test_get_gender_by_name_success() {
     dotenv().ok();
 
-    let database_url = std::env::var("DATABASE_URL").unwrap();
+    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
     let pool = create_pool(&database_url).await;
 
     let gender_name = "Fantasia".to_string();
@@ -118,7 +123,7 @@ async fn test_get_gender_by_name_success() {
 async fn test_get_gender_by_name_failure() {
     dotenv().ok();
 
-    let database_url = std::env::var("DATABASE_URL").unwrap();
+    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
     let pool = create_pool(&database_url).await;
 
     let state = AppState {
@@ -151,7 +156,7 @@ async fn test_get_gender_by_name_failure() {
 async fn test_complete_gender_flux() {
     dotenv().ok();
 
-    let database_url = std::env::var("DATABASE_URL").unwrap();
+    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
     let pool = create_pool(&database_url).await;
 
     let state = AppState {
@@ -212,10 +217,10 @@ async fn test_complete_gender_flux() {
 
     let new_gender_name = "BBB".to_string();
 
-    let book_id = body[0].get_id();
+    let gender_id = body[0].get_id();
 
     let payload = json!({
-        "id": book_id,
+        "id": gender_id,
         "name": new_gender_name,
         "user_id": user_id
     });
@@ -237,7 +242,7 @@ async fn test_complete_gender_flux() {
 
     // --------------------------- Deletando gênero ---------------------------
 
-    let uri = format!("/gender/delete?id={}&user_id={}", book_id, user_id);
+    let uri = format!("/gender/delete?id={}&user_id={}", gender_id, user_id);
 
     let mut request = Request::builder()
         .uri(&uri)
