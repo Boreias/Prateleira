@@ -3,7 +3,14 @@ CREATE DATABASE Prateleira;
 CREATE TABLE author (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
-    avatar BYTEA,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE author_image (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    original_name VARCHAR(255) NOT NULL,
+    image_path TEXT NOT NULL,
+    author_id UUID NOT NULL REFERENCES author(id) ON DELETE CASCADE,
     deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
@@ -12,7 +19,13 @@ CREATE TABLE publisher (
     name VARCHAR(255) NOT NULL,
     site VARCHAR(255),
     email VARCHAR(255),
-    avatar BYTEA
+    publisher_image_id REFERENCES publisher_image(id)
+);
+
+CREATE TABLE publisher_image (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    original_name VARCHAR(255) NOT NULL,
+    image_path TEXT NOT NULL
 );
 
 CREATE TABLE gender (
@@ -90,7 +103,13 @@ CREATE TABLE book (
     language VARCHAR(100),
     isbn VARCHAR(15),
     synopsis TEXT,
-    cover BYTEA
+    book_image_id UUID REFERENCES book_image(id)
+);
+
+CREATE TABLE book_image (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    original_name VARCHAR(255) NOT NULL,
+    image_path TEXT NOT NULL
 );
 
 CREATE TABLE book_author(

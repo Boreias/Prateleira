@@ -86,18 +86,19 @@ impl IGenderRepository for GenderRepository {
     }
 
     async fn get_gender_by_name(&self, name: String, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
+        let format_name = format!("%{}%", name);
         let gender_rows: Vec<GenderRow> = sqlx::query_as(r#"
             SELECT
                 id, name
             FROM
                 gender
             WHERE
-                name = $1 AND deleted = false
+                name LIKE $1 AND deleted = false
             LIMIT $2
             OFFSET $3
             "#
         )
-            .bind(name)
+            .bind(format_name)
             .bind(page_size)
             .bind(skip)
             .fetch_all(&self.pool)

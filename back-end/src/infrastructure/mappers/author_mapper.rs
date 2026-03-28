@@ -6,7 +6,7 @@ impl From<AuthorRow> for Author {
         Author::new(
             row.id,
             row.name,
-            row.avatar,
+            None,
             None, // livros carregados separadamente
         )
     }
