@@ -16,7 +16,13 @@ pub async fn create_pool(database_url: &str) -> PgPool {
 
 #[cfg(test)]
 mod tests {
-    use sqlx::{Row, postgres::PgRow, query, query_as};
+    use sqlx::{
+        Pool,
+        Postgres,
+        Row,
+        query,
+        query_as
+    };
     use std::env;
     use dotenv::dotenv;
 
@@ -56,7 +62,29 @@ mod tests {
         assert!(row.0);
     }
 
-    fn check_gender_schema(schema: Vec<PgRow>) {
+    async fn check_gender_table_schema(database_url: String) {
+
+        let pool = create_pool(&database_url).await;
+
+        let gender: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'gender'
+        );").fetch_one(&pool).await.unwrap();
+
+        assert!(gender.0);
+
+        let schema = query(r#"
+            SELECT
+                column_name,
+                data_type
+            FROM
+                information_schema.columns
+            WHERE
+                table_name = 'gender'
+            ORDER BY column_name ASC;
+        "#).fetch_all(&pool).await.unwrap();
 
         assert_eq!(schema.len(), 3);
 
@@ -84,46 +112,32 @@ mod tests {
         dotenv().ok();
         let database_url = env::var("DATABASE_URL")
             .expect("Variável de ambiente DATABASE_URL não definida");
-        let pool = create_pool(&database_url).await;
-
-        let gender: (bool,) = query_as("SELECT EXISTS (
-            SELECT 1 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND table_name = 'gender'
-        );").fetch_one(&pool).await.unwrap();
-
-        assert!(gender.0);
-
-        let schema = query(r#"
-            SELECT
-                column_name,
-                data_type
-            FROM
-                information_schema.columns
-            WHERE
-                table_name = 'gender'
-            ORDER BY column_name ASC;
-        "#).fetch_all(&pool).await.unwrap();
         
-        check_gender_schema(schema);
+        check_gender_table_schema(database_url).await;
     }
 
     #[tokio::test]
-    async fn test_check_gender_table_test() {
+    async fn test_check_gender_test_table() {
         dotenv().ok();
         let database_url = env::var("TESTE_DATABASE_URL")
             .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
-        let pool = create_pool(&database_url).await;
 
-        let gender: (bool,) = query_as("SELECT EXISTS (
+        check_gender_table_schema(database_url).await;
+    }
+
+
+    async fn check_author_table_schema(database_url: String) {
+
+        let pool: Pool<Postgres> = create_pool(&database_url).await;
+
+        let table: (bool,) = query_as("SELECT EXISTS (
             SELECT 1 
             FROM information_schema.tables 
             WHERE table_schema = 'public' 
-            AND table_name = 'gender'
+            AND table_name = 'author'
         );").fetch_one(&pool).await.unwrap();
 
-        assert!(gender.0);
+        assert!(table.0);
 
         let schema = query(r#"
             SELECT
@@ -132,16 +146,9 @@ mod tests {
             FROM
                 information_schema.columns
             WHERE
-                table_name = 'gender'
+                table_name = 'author'
             ORDER BY column_name ASC;
         "#).fetch_all(&pool).await.unwrap();
-
-        check_gender_schema(schema);
-    }
-
-    
-
-    fn check_author_schema(schema: Vec<PgRow>) {
 
         assert_eq!(schema.len(), 3);
 
@@ -169,59 +176,17 @@ mod tests {
         dotenv().ok();
         let database_url = env::var("DATABASE_URL")
             .expect("Variável de ambiente DATABASE_URL não definida");
-        let pool = create_pool(&database_url).await;
 
-        let table: (bool,) = query_as("SELECT EXISTS (
-            SELECT 1 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND table_name = 'author'
-        );").fetch_one(&pool).await.unwrap();
-
-        assert!(table.0);
-
-        let schema = query(r#"
-            SELECT
-                column_name,
-                data_type
-            FROM
-                information_schema.columns
-            WHERE
-                table_name = 'author'
-            ORDER BY column_name ASC;
-        "#).fetch_all(&pool).await.unwrap();
-
-        check_author_schema(schema);
+        check_author_table_schema(database_url).await;
     }
 
     #[tokio::test]
-    async fn test_check_author_table_test() {
+    async fn test_check_author_test_table() {
         dotenv().ok();
         let database_url = env::var("TESTE_DATABASE_URL")
             .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
-        let pool = create_pool(&database_url).await;
 
-        let table: (bool,) = query_as("SELECT EXISTS (
-            SELECT 1 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND table_name = 'author'
-        );").fetch_one(&pool).await.unwrap();
-
-        assert!(table.0);
-
-        let schema = query(r#"
-            SELECT
-                column_name,
-                data_type
-            FROM
-                information_schema.columns
-            WHERE
-                table_name = 'author'
-            ORDER BY column_name ASC;
-        "#).fetch_all(&pool).await.unwrap();
-
-        check_author_schema(schema);
+        check_author_table_schema(database_url).await;
     }
 
     // #[tokio::test]

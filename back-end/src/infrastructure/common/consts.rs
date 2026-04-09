@@ -1,1 +1,1 @@
-pub const UPLOADS_IMAGE_PATH: &str = "infrastructure/uploads/images";
+pub const UPLOADS_IMAGE_PATH: &str = "src/infrastructure/uploads/images";
