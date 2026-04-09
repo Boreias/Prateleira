@@ -58,7 +58,7 @@ impl IAuthorRepository for AuthorRepository {
             let image_id = Some(Uuid::new_v4());
             let new_filename = format!("{}.png", Uuid::new_v4());
 
-            let path = format!("../{}/author/{}", UPLOADS_IMAGE_PATH, new_filename);
+            let path = format!("./{}/author/{}", UPLOADS_IMAGE_PATH, new_filename);
 
             let mut file = tokio::fs::File::create(&path).await.unwrap();
             file.write_all(&file_content.unwrap()).await.unwrap();
@@ -557,7 +557,6 @@ impl IAuthorRepository for AuthorRepository {
         file_content: Option<Bytes>,
         _books: Option<Vec<Uuid>>
     ) -> Result<(), String> {
-        let mut image_id: Option<Uuid> = None;
 
         if file_name.is_some() && file_content.is_some() {
             let image_row: Option<ImageRow> = sqlx::query_as(r#"
@@ -590,10 +589,10 @@ impl IAuthorRepository for AuthorRepository {
                     .map_err(|e| e.to_string())?;
             }
 
-            image_id = Some(Uuid::new_v4());
+            let image_id = Some(Uuid::new_v4());
             let new_filename = format!("{}.png", Uuid::new_v4());
 
-            let path = format!("../{}/author/{}", UPLOADS_IMAGE_PATH, new_filename);
+            let path = format!("./{}/author/{}", UPLOADS_IMAGE_PATH, new_filename);
 
             let mut file = tokio::fs::File::create(&path).await.unwrap();
             file.write_all(&file_content.unwrap()).await.unwrap();
@@ -649,14 +648,13 @@ impl IAuthorRepository for AuthorRepository {
             UPDATE
                 author
             SET
-                name = $2, author_image_id = $3
+                name = $2
             WHERE
                 id = $1 AND deleted = false;
             "#
         )
             .bind(id)
             .bind(name)
-            .bind(image_id.unwrap())
             .execute(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
@@ -665,20 +663,6 @@ impl IAuthorRepository for AuthorRepository {
     }
 
     async fn delete_author(&self, id: Uuid, _user_id: Uuid) -> Result<(), String> {
-        let deleted_author: AuthorRow = sqlx::query_as(r#"
-            SELECT
-                id, name, author_image_id
-            FROM
-                author
-            WHERE
-                id = $1
-            "#
-        )
-            .bind(id)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| e.to_string())?;
-
         sqlx::query(r#"
             UPDATE
                 author_image
@@ -688,7 +672,7 @@ impl IAuthorRepository for AuthorRepository {
                 author_id = $1
             "#
         )
-            .bind(deleted_author.id)
+            .bind(id)
             .execute(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
