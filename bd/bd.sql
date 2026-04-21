@@ -19,13 +19,15 @@ CREATE TABLE publisher (
     name VARCHAR(255) NOT NULL,
     site VARCHAR(255),
     email VARCHAR(255),
-    publisher_image_id REFERENCES publisher_image(id)
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE publisher_image (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     original_name VARCHAR(255) NOT NULL,
-    image_path TEXT NOT NULL
+    image_path TEXT NOT NULL,
+    publisher_id UUID NOT NULL REFERENCES publisher(id) ON DELETE CASCADE,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE gender (

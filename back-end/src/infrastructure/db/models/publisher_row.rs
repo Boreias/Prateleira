@@ -7,6 +7,5 @@ pub struct PublisherRow {
     pub id: Uuid,
     pub name: String,
     pub site: Option<String>,
-    pub email: Option<String>,
-    pub avatar: Option<String>,
+    pub email: Option<String>
 }
