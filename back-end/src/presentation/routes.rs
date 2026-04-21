@@ -7,6 +7,7 @@ use crate::infrastructure::app_state::AppState;
 // use crate::presentation::controllers::user_controller::user_routes;
 use crate::presentation::controllers::author_controller::author_routes;
 use crate::presentation::controllers::gender_controller::gender_routes;
+use crate::presentation::controllers::publisher_controller::publisher_routes;
 
 pub fn create_app(state: AppState) -> Router {
     Router::new()
@@ -14,5 +15,6 @@ pub fn create_app(state: AppState) -> Router {
         .nest("/author", author_routes())
         .nest_service("/uploads", ServeDir::new("infrastructure/uploads"))
         .nest("/gender", gender_routes())
+        .nest("/publisher", publisher_routes())
         .with_state(state)
 }

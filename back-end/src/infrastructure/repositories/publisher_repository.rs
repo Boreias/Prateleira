@@ -7,9 +7,9 @@ use tokio::{
 use uuid::Uuid;
 use sqlx::{PgPool, Row};
 
-use crate::domain::irepositories::iauthor_repository::IAuthorRepository;
-use crate::domain::entities::author::Author;
-use crate::infrastructure::db::models::author_row::AuthorRow;
+use crate::domain::entities::publisher::Publisher;
+use crate::domain::irepositories::ipublisher_repository::IPublisherRepository;
+use crate::infrastructure::db::models::publisher_row::PublisherRow;
 use crate::infrastructure::db::models::book_author_row::BookAuthorRow;
 use crate::infrastructure::db::models::book_gender_row::BookGenderRow;
 use crate::infrastructure::db::models::book_publisher_row::BookPublisherRow;
@@ -18,11 +18,11 @@ use crate::infrastructure::enums::reading_status::ReadingStatus;
 use crate::infrastructure::common::consts::UPLOADS_IMAGE_PATH;
 
 
-pub struct AuthorRepository {
+pub struct PublisherRepository {
     pool: PgPool
 }
 
-impl AuthorRepository {
+impl PublisherRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
@@ -30,26 +30,28 @@ impl AuthorRepository {
 
 
 #[async_trait]
-impl IAuthorRepository for AuthorRepository {
-    async fn create_author(
+impl IPublisherRepository for PublisherRepository {
+    async fn create_publisher (
         &self,
         name: String,
         _user_id: Uuid,
+        site: Option<String>,
+        email: Option<String>,
         file_name: Option<String>,
-        file_content: Option<Bytes>,
-        _books: Option<Vec<Uuid>>,
+        file_content: Option<Bytes>
     ) -> Result<(), String> {
-        
-        let author_id = Uuid::new_v4();
+        let publisher_id = Uuid::new_v4();
         sqlx::query(r#"
             INSERT INTO
-                author (id, name)
+                publisher (id, name, site, email)
             VALUES
-                ($1, $2);
+                ($1, $2, $3, $4);
             "#
         )
-            .bind(author_id)
+            .bind(publisher_id)
             .bind(name)
+            .bind(site.unwrap())
+            .bind(email.unwrap())
             .execute(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
@@ -58,14 +60,14 @@ impl IAuthorRepository for AuthorRepository {
             let image_id = Some(Uuid::new_v4());
             let new_filename = format!("{}.png", Uuid::new_v4());
 
-            let path = format!("./{}/author/{}", UPLOADS_IMAGE_PATH, new_filename);
+            let path = format!("./{}/publisher/{}", UPLOADS_IMAGE_PATH, new_filename);
 
             let mut file = tokio::fs::File::create(&path).await.unwrap();
             file.write_all(&file_content.unwrap()).await.unwrap();
 
             sqlx::query(r#"
                 INSERT INTO
-                    author_image (id, original_name, image_path, author_id)
+                    publisher_image (id, original_name, image_path, publisher_id)
                 VALUES
                     ($1, $2, $3, $4);
                 "#
@@ -73,7 +75,7 @@ impl IAuthorRepository for AuthorRepository {
                 .bind(image_id.unwrap())
                 .bind(file_name)
                 .bind(path)
-                .bind(author_id)
+                .bind(publisher_id)
                 .execute(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -82,12 +84,12 @@ impl IAuthorRepository for AuthorRepository {
         Ok(())
     }
 
-    async fn get_author_by_id(&self, id: Uuid) -> Result<Author, String> {
-        let author_row: AuthorRow = sqlx::query_as(r#"
+    async fn get_publisher_by_id (&self, id: Uuid) -> Result<Publisher, String> {
+        let publisher_row: PublisherRow = sqlx::query_as(r#"
             SELECT
-                id, name
+                id, name, site, email
             FROM
-                author
+                publisher
             WHERE
                 id = $1 AND deleted = false;
             "#
@@ -103,12 +105,12 @@ impl IAuthorRepository for AuthorRepository {
             SELECT
                 id, original_name, image_path
             FROM
-                author_image
+                publisher_image
             WHERE
-                author_id = $1 AND deleted = false;
+                publisher_id = $1 AND deleted = false;
             "#
         )
-            .bind(author_row.id)
+            .bind(publisher_row.id)
             .fetch_optional(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
@@ -117,19 +119,19 @@ impl IAuthorRepository for AuthorRepository {
             avatar = Some(image_row.unwrap().image_path);
         }
 
-        let mut author: Author = author_row.into();
-        author.set_avatar(avatar);
+        let mut publisher: Publisher = publisher_row.into();
+        publisher.set_avatar(avatar);
 
-        Ok(author)
+        Ok(publisher)
     }
 
-    async fn get_author_by_name(&self, name: String, skip: i32, page_size: i32) -> Result<Vec<Author>, String> {
+    async fn get_publisher_by_name (&self, name: String, skip: i32, page_size: i32) -> Result<Vec<Publisher>, String> {
         let format_name = format!("%{}%", name);
-        let author_rows: Vec<AuthorRow> = sqlx::query_as(r#"
+        let publisher_rows: Vec<PublisherRow> = sqlx::query_as(r#"
             SELECT
-                id, name
+                id, name, site, email
             FROM
-                author
+                publisher
             WHERE
                 name LIKE $1 AND deleted = false
             LIMIT $2
@@ -143,21 +145,21 @@ impl IAuthorRepository for AuthorRepository {
             .await
             .map_err(|e| e.to_string())?;
 
-        let mut authors = Vec::new();
+        let mut publishers = Vec::new();
 
-        for author_row in author_rows {
+        for publisher_row in publisher_rows {
             let mut avatar: Option<String> = None;
 
             let image_row: Option<ImageRow> = sqlx::query_as(r#"
                 SELECT
                     id, original_name, image_path
                 FROM
-                    author_image
+                    publisher_image
                 WHERE
-                    author_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted = false;
                 "#
             )
-                .bind(author_row.id)
+                .bind(publisher_row.id)
                 .fetch_optional(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -166,75 +168,148 @@ impl IAuthorRepository for AuthorRepository {
                 avatar = Some(image_row.unwrap().image_path);
             }
 
-            let mut author: Author = author_row.into();
-            author.set_avatar(avatar);
+            let mut publisher: Publisher = publisher_row.into();
+            publisher.set_avatar(avatar);
 
-            authors.push(author);
+            publishers.push(publisher);
         }
 
-        Ok(authors)
+        Ok(publishers)
     }
 
-    async fn get_authors_by_book(&self, book_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Author>, String> {
-        let book_author_rows: Vec<BookAuthorRow> = sqlx::query_as("SELECT author_id FROM book_author WHERE book_id = $1")
+    async fn get_publisher_by_book (&self, book_id: Uuid, skip: i32, page_size: i32) -> Result<Publisher, String> {
+        let book_publisher_row: BookPublisherRow = sqlx::query_as("SELECT publisher_id FROM book_publisher WHERE book_id = $1")
             .bind(book_id)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let publisher_row: PublisherRow = sqlx::query_as(r#"
+            SELECT
+                id, name, site, email
+            FROM
+                publisher
+            WHERE
+                id = $1 AND deleted = false
+            LIMIT $2
+            OFFSET $3;
+            "#
+        )
+            .bind(book_publisher_row.publisher_id)
+            .bind(page_size)
+            .bind(skip)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let mut avatar: Option<String> = None;
+
+        let image_row: Option<ImageRow> = sqlx::query_as(r#"
+            SELECT
+                id, original_name, image_path
+            FROM
+                publisher_image
+            WHERE
+                publisher_id = $1 AND deleted = false;
+            "#
+        )
+            .bind(publisher_row.id)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if image_row.is_some() {
+            avatar = Some(image_row.unwrap().image_path);
+        }
+
+        let mut publisher: Publisher = publisher_row.into();
+        publisher.set_avatar(avatar);
+
+        Ok(publisher)
+    }
+
+    async fn get_publishers_by_author (&self, author_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Publisher>, String> {
+        let book_rows: Vec<BookAuthorRow> = sqlx::query_as(r#"
+            SELECT
+                id, book_id, author_id
+            FROM
+                book_author
+            WHERE author_id = $1
+            LIMIT $2
+            OFFSET $3;
+            "#
+        )
+            .bind(author_id)
+            .bind(page_size)
+            .bind(skip)
             .fetch_all(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
 
-        let mut authors = Vec::new();
+        let mut publishers: Vec<Publisher> = Vec::new();
 
-        for book_author_row in book_author_rows {        
-            let author_rows: Vec<AuthorRow> = sqlx::query_as(r#"
+        for book_row in book_rows {
+
+            let book_id = book_row.book_id;
+
+            let book_publisher_row: BookPublisherRow = sqlx::query_as(r#"
                 SELECT
-                    id, name
+                    id as book_id, publisher_id
                 FROM
-                    author
+                    book
                 WHERE
-                    id = $1 AND deleted = false
-                LIMIT $2
-                OFFSET $3;
+                    book_id = $1
                 "#
             )
-                .bind(book_author_row.author_id)
-                .bind(page_size)
-                .bind(skip)
-                .fetch_all(&self.pool)
+                .bind(book_id)
+                .fetch_one(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
 
-            for author_row in author_rows {
-                let mut avatar: Option<String> = None;
+            let publisher_row: PublisherRow = sqlx::query_as(r#"
+                SELECT
+                    id, name, site, email
+                FROM
+                    publisher
+                WHERE
+                    book_id = $1
+                "#
+            )
+                .bind(book_publisher_row.publisher_id)
+                .fetch_one(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
 
-                let image_row: Option<ImageRow> = sqlx::query_as(r#"
-                    SELECT
-                        id, original_name, image_path
-                    FROM
-                        author_image
-                    WHERE
-                        author_id = $1 AND deleted = false;
-                    "#
-                )
-                    .bind(author_row.id)
-                    .fetch_optional(&self.pool)
-                    .await
-                    .map_err(|e| e.to_string())?;
+            let mut avatar: Option<String> = None;
 
-                if image_row.is_some() {
-                    avatar = Some(image_row.unwrap().image_path);
-                }
+            let image_row: Option<ImageRow> = sqlx::query_as(r#"
+                SELECT
+                    id, original_name, image_path
+                FROM
+                    publisher_image
+                WHERE
+                    publisher_id = $1 AND deleted = false;
+                "#
+            )
+                .bind(publisher_row.id)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
 
-                let mut author: Author = author_row.into();
-                author.set_avatar(avatar);
-
-                authors.push(author);
+            if image_row.is_some() {
+                avatar = Some(image_row.unwrap().image_path);
             }
+
+            let mut publisher: Publisher = publisher_row.into();
+            publisher.set_avatar(avatar);
+
+            publishers.push(publisher);
         }
 
-        Ok(authors)
+        Ok(publishers)
     }
 
-    async fn get_authors_by_gender(&self, gender_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Author>, String> {
+    async fn get_publishers_by_gender (&self, gender_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Publisher>, String> {
         let book_gender_rows: Vec<BookGenderRow> = sqlx::query_as(r#"
             SELECT
                 book_id
@@ -253,143 +328,71 @@ impl IAuthorRepository for AuthorRepository {
             .await
             .map_err(|e| e.to_string())?;
 
-        let mut authors = Vec::new();
+        let mut publishers = Vec::new();
 
         for book_gender_row in book_gender_rows {
-            let author_rows: Vec<BookAuthorRow> = sqlx::query_as(r#"
+            let publisher_row: BookPublisherRow = sqlx::query_as(r#"
                 SELECT
-                    id, book_id, author_id
+                    id as book_id, publisher_id
                 FROM
-                    book_author
+                    book
                 WHERE
                     book_id = $1;
                 "#
             )
                 .bind(book_gender_row.book_id)
-                .fetch_all(&self.pool)
+                .fetch_one(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
 
-            for author_row in author_rows {
-                let author_query: AuthorRow = sqlx::query_as(r#"
-                    SELECT
-                        id, name
-                    FROM
-                        author
-                    WHERE
-                        id = $1 AND deleted = false;
-                    "#
-                )
-                    .bind(author_row.author_id)
-                    .fetch_one(&self.pool)
-                    .await
-                    .map_err(|e| e.to_string())?;
-
-                let mut avatar: Option<String> = None;
-
-                let image_row: Option<ImageRow> = sqlx::query_as(r#"
-                    SELECT
-                        id, original_name, image_path
-                    FROM
-                        author_image
-                    WHERE
-                        author_id = $1 AND deleted = false;
-                    "#
-                )
-                    .bind(author_row.id)
-                    .fetch_optional(&self.pool)
-                    .await
-                    .map_err(|e| e.to_string())?;
-
-                if image_row.is_some() {
-                    avatar = Some(image_row.unwrap().image_path);
-                }
-
-                let mut author: Author = author_query.into();
-                author.set_avatar(avatar);
-
-                authors.push(author);
-            }
-        }
-
-        Ok(authors)
-    }
-
-    async fn get_authors_by_publisher(&self, publisher_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Author>, String> {
-        let book_publisher_rows: Vec<BookPublisherRow> = sqlx::query_as("SELECT book_id FROM book_publisher WHERE publisher_id = $1")
-            .bind(publisher_id)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(|e| e.to_string())?;
-
-        let mut authors: Vec<Author> = Vec::new();
-
-        for book_publisher_row in book_publisher_rows {
-
-            let book_id = book_publisher_row.book_id;
-
-            let author_rows: Vec<BookAuthorRow> = sqlx::query_as("SELECT author_id FROM book_author WHERE book_id = $1")
-                .bind(book_id)
-                .fetch_all(&self.pool)
+            let publisher_query: PublisherRow = sqlx::query_as(r#"
+                SELECT
+                    id, name, site, email
+                FROM
+                    publisher
+                WHERE
+                    id = $1 AND deleted = false;
+                "#
+            )
+                .bind(publisher_row.publisher_id)
+                .fetch_one(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
 
-            for row in author_rows {
-                let id = row.author_id;
+            let mut avatar: Option<String> = None;
 
-                let author_row: AuthorRow = sqlx::query_as(r#"
-                    SELECT
-                        id, name
-                    FROM
-                        author
-                    WHERE
-                        id = $1 AND deleted = false
-                    LIMIT $2
-                    OFFSET $3;
-                    "#
-                )
-                    .bind(id)
-                    .bind(page_size)
-                    .bind(skip)
-                    .fetch_one(&self.pool)
-                    .await
-                    .map_err(|e| e.to_string())?;
+            let image_row: Option<ImageRow> = sqlx::query_as(r#"
+                SELECT
+                    id, original_name, image_path
+                FROM
+                    publisher_image
+                WHERE
+                    publisher_id = $1 AND deleted = false;
+                "#
+            )
+                .bind(publisher_row.publisher_id)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
 
-                let mut avatar: Option<String> = None;
-
-                let image_row: Option<ImageRow> = sqlx::query_as(r#"
-                    SELECT
-                        id, original_name, image_path
-                    FROM
-                        author_image
-                    WHERE
-                        author_id = $1 AND deleted = false;
-                    "#
-                )
-                    .bind(author_row.id)
-                    .fetch_optional(&self.pool)
-                    .await
-                    .map_err(|e| e.to_string())?;
-
-                if image_row.is_some() {
-                    avatar = Some(image_row.unwrap().image_path);
-                }
-
-                let mut author: Author = author_row.into();
-                author.set_avatar(avatar);
-
-                authors.push(author);
+            if image_row.is_some() {
+                avatar = Some(image_row.unwrap().image_path);
             }
+
+            let mut publisher: Publisher = publisher_query.into();
+            publisher.set_avatar(avatar);
+
+            publishers.push(publisher);
         }
 
-        Ok(authors)
+        Ok(publishers)
     }
 
-    async fn more_popular_author(
+    async fn more_popular_publishers(
         &self,
         skip: i32,
         page_size: i32
-    ) -> Result<Vec<Author>, String> {
+    ) -> Result<Vec<Publisher>, String> {
         let book_rows = sqlx::query(r#"
             SELECT
                 book_id,
@@ -409,15 +412,15 @@ impl IAuthorRepository for AuthorRepository {
             .await
             .map_err(|e| e.to_string())?;
 
-        let mut authors: Vec<Author> = Vec::new();
+        let mut publishers: Vec<Publisher> = Vec::new();
 
         for book in book_rows {
             let book_id: Uuid = book.get("book_id");
-            let authors_book = sqlx::query(r#"
+            let publisher_book = sqlx::query(r#"
                 SELECT
-                    author_id
+                    publisher_id
                 FROM
-                    book_author
+                    book_publisher
                 WHERE
                     book_id = $1
                 LIMIT $2
@@ -427,82 +430,78 @@ impl IAuthorRepository for AuthorRepository {
             .bind(book_id)
             .bind(page_size)
             .bind(skip)
-            .fetch_all(&self.pool)
+            .fetch_one(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
 
-            let authors_id: Vec<Uuid> = authors_book.iter().map(|row| {
-                row.get("id")
-            }).collect();
+            let publisher_id: Uuid = publisher_book.get("publisher_id");
 
-            let param = format!("?{}", ", ?".repeat(authors_id.len()-1));
-
-            let author_rows: Vec<AuthorRow> = sqlx::query_as(r#"
+            let publisher_row: PublisherRow = sqlx::query_as(r#"
                 SELECT
-                    id, name
+                    id, name, site, email
                 FROM
-                    author
+                    publisher
                 WHERE
-                    id IN ($1) AND deleted = false
+                    id = $1 AND deleted = false
                 LIMIT $2
                 OFFSET $3;
             "#
         )
-            .bind(param)
+            .bind(publisher_id)
             .bind(page_size)
             .bind(skip)
-            .fetch_all(&self.pool)
+            .fetch_one(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
 
-            for author_row in author_rows {
-                let mut avatar: Option<String> = None;
+            let mut avatar: Option<String> = None;
 
-                let image_row: Option<ImageRow> = sqlx::query_as(r#"
-                    SELECT
-                        id, original_name, image_path
-                    FROM
-                        author_image
-                    WHERE
-                        author_id = $1 AND deleted = false;
-                    "#
-                )
-                    .bind(author_row.id)
-                    .fetch_optional(&self.pool)
-                    .await
-                    .map_err(|e| e.to_string())?;
+            let image_row: Option<ImageRow> = sqlx::query_as(r#"
+                SELECT
+                    id, original_name, image_path
+                FROM
+                    publisher_image
+                WHERE
+                    publisher_id = $1 AND deleted = false;
+                "#
+            )
+                .bind(publisher_row.id)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
 
-                if image_row.is_some() {
-                    avatar = Some(image_row.unwrap().image_path);
-                }
-
-                let mut author: Author = author_row.into();
-                author.set_avatar(avatar);
-
-                authors.push(author);
+            if image_row.is_some() {
+                avatar = Some(image_row.unwrap().image_path);
             }
+
+            let mut publisher: Publisher = publisher_row.into();
+            publisher.set_avatar(avatar);
+
+            publishers.push(publisher);
         }
 
-        Ok(authors)
+        Ok(publishers)
     }
 
-    async fn best_valuated_author(
+    async fn best_valuated_publishers(
         &self,
         skip: i32,
         page_size: i32
-    ) -> Result<Vec<Author>, String> {
-        let author_rows = sqlx::query(r#"
+    ) -> Result<Vec<Publisher>, String> {
+        let publisher_rows = sqlx::query(r#"
             SELECT
-                a.id,
-                a.name,
-                AVG(br.review)::float8 AS author_average,
+                p.id,
+                p.name,
+                p.site,
+                p.email,
+                AVG(br.review)::float8 AS publisher_average,
                 COUNT(br.review) AS total_reviews
-            FROM author a
-            WHERE a.deleted = false
-            JOIN book b ON b.author_id = a.id
+            FROM publisher p
+            WHERE p.deleted = false
+            JOIN book b ON b.publisher_id = p.id
             JOIN book_review br ON br.book_id = b.id
-            GROUP BY a.id, a.name
-            ORDER BY author_average DESC
+            GROUP BY p.id, p.name
+            ORDER BY publisher_average DESC
             LIMIT $1
             OFFSET $2;
             "#
@@ -513,22 +512,22 @@ impl IAuthorRepository for AuthorRepository {
             .await
             .map_err(|e| e.to_string())?;
 
-        let mut authors: Vec<Author> = Vec::new();
+        let mut publishers: Vec<Publisher> = Vec::new();
 
-        for author_row in author_rows {
+        for publisher_row in publisher_rows {
             let mut avatar: Option<String> = None;
 
-            let author_id: Uuid = author_row.get("a.id");
+            let publisher_id: Uuid = publisher_row.get("a.id");
 
             let image_row: Option<ImageRow> = sqlx::query_as(r#"
                 SELECT
                     id, original_name, image_path
                 FROM
-                    author_image
+                    publisher_image
                 WHERE
                     id = $1 AND deleted = false;
                 "#)
-                .bind(author_id)
+                .bind(publisher_id)
                 .fetch_optional(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -537,23 +536,32 @@ impl IAuthorRepository for AuthorRepository {
                 avatar = Some(image_row.unwrap().image_path);
             }
 
-            let mut author: Author = Author::new(author_row.get("a.id"), author_row.get("a.name"), None, None);
-            author.set_avatar(avatar);
+            let mut publisher: Publisher = Publisher::new(
+                publisher_row.get("p.id"),
+                publisher_row.get("p.name"),
+                publisher_row.get("p.site"),
+                publisher_row.get("p.email"),
+                None,
+                None
+            );
 
-            authors.push(author);
+            publisher.set_avatar(avatar);
+
+            publishers.push(publisher);
         }
 
-        Ok(authors)
+        Ok(publishers)
     }
 
-    async fn alter_author(
-        &mut self,
+    async fn alter_publisher (
+        &self,
         id: Uuid,
         name: String,
         _user_id: Uuid,
+        site: Option<String>,
+        email: Option<String>,
         file_name: Option<String>,
-        file_content: Option<Bytes>,
-        _books: Option<Vec<Uuid>>
+        file_content: Option<Bytes>
     ) -> Result<(), String> {
 
         if file_name.is_some() && file_content.is_some() {
@@ -561,9 +569,9 @@ impl IAuthorRepository for AuthorRepository {
                 SELECT
                     id, original_name, image_path
                 FROM
-                    author_image
+                    publisher_image
                 WHERE
-                    author_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted = false;
                 "#
             )
                 .bind(id)
@@ -576,7 +584,7 @@ impl IAuthorRepository for AuthorRepository {
 
                 sqlx::query(r#"
                     DELETE FROM
-                        author_image
+                        publisher_image
                     WHERE
                         id = $1
                     "#
@@ -590,14 +598,14 @@ impl IAuthorRepository for AuthorRepository {
             let image_id = Some(Uuid::new_v4());
             let new_filename = format!("{}.png", Uuid::new_v4());
 
-            let path = format!("./{}/author/{}", UPLOADS_IMAGE_PATH, new_filename);
+            let path = format!("./{}/publisher/{}", UPLOADS_IMAGE_PATH, new_filename);
 
             let mut file = tokio::fs::File::create(&path).await.unwrap();
             file.write_all(&file_content.unwrap()).await.unwrap();
 
             sqlx::query(r#"
                 INSERT INTO
-                    author_image (id, original_name, image_path, author_id)
+                    publisher_image (id, original_name, image_path, publisher_id)
                 VALUES
                     ($1, $2, $3, $4);
                 "#
@@ -614,9 +622,9 @@ impl IAuthorRepository for AuthorRepository {
                 SELECT
                     id, original_name, image_path
                 FROM
-                    author_image
+                    publisher_image
                 WHERE
-                    author_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted = false;
                 "#
             )
                 .bind(id)
@@ -630,7 +638,7 @@ impl IAuthorRepository for AuthorRepository {
 
                 sqlx::query(r#"
                     DELETE FROM
-                        author_image
+                        publisher_image
                     WHERE
                         id = $1
                     "#
@@ -644,15 +652,17 @@ impl IAuthorRepository for AuthorRepository {
 
         sqlx::query(r#"
             UPDATE
-                author
+                publisher
             SET
-                name = $2
+                name = $2, site = $3, email = $4
             WHERE
                 id = $1 AND deleted = false;
             "#
         )
             .bind(id)
             .bind(name)
+            .bind(site)
+            .bind(email)
             .execute(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
@@ -660,14 +670,14 @@ impl IAuthorRepository for AuthorRepository {
         Ok(())
     }
 
-    async fn delete_author(&self, id: Uuid, _user_id: Uuid) -> Result<(), String> {
+    async fn delete_publisher (&self, id: Uuid, _user_id: Uuid) -> Result<(), String> {
         sqlx::query(r#"
             UPDATE
-                author_image
+                publisher_image
             SET
                 deleted = true
             WHERE
-                author_id = $1
+                publisher_id = $1
             "#
         )
             .bind(id)
@@ -677,7 +687,7 @@ impl IAuthorRepository for AuthorRepository {
 
         sqlx::query(r#"
             UPDATE
-                author
+                publisher
             SET
                 deleted = true
             WHERE
@@ -692,12 +702,12 @@ impl IAuthorRepository for AuthorRepository {
         Ok(())
     }
 
-    async fn clear_deleted_authors(&self) -> Result<(), String> {
+    async fn clear_deleted_publishers(&self) -> Result<(), String> {
         let deleted_images: Vec<ImageRow> = sqlx::query_as(r#"
             SELECT
                 id, original_name, image_path
             FROM
-                author_image
+                publisher_image
             WHERE
                 deleted = true
             "#
@@ -712,7 +722,7 @@ impl IAuthorRepository for AuthorRepository {
 
         sqlx::query(r#"
             DELETE FROM
-                author_image
+                publisher_image
             WHERE deleted = true
             "#
         )
@@ -722,7 +732,7 @@ impl IAuthorRepository for AuthorRepository {
 
         sqlx::query(r#"
             DELETE FROM
-                author
+                publisher
             WHERE deleted = true
             "#
         )

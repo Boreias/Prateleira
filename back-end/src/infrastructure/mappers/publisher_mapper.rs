@@ -8,7 +8,7 @@ impl From<PublisherRow> for Publisher {
             row.name,
             row.site,
             row.email,
-            row.avatar,
+            None,
             None
         )
     }

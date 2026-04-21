@@ -14,19 +14,19 @@ use bytes::BytesMut;
 use dotenv::dotenv;
 use tower::ServiceExt;
 use http_body_util::BodyExt;
+use uuid::Uuid;
 
 
 use back_end::infrastructure::app_state::AppState;
 use back_end::infrastructure::db::connection::create_pool;
 use back_end::presentation::routes::create_app;
-use back_end::domain::entities::author::Author;
-use uuid::Uuid;
+use back_end::domain::entities::publisher::Publisher;
 
-const TEST_IMAGE_PATH: &str = "./tests/images/author";
+const TEST_IMAGE_PATH: &str = "./tests/images/publisher";
 
 
 #[tokio::test]
-async fn test_get_author_by_id_success() {
+async fn test_get_publisher_by_id_success() {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
@@ -39,7 +39,7 @@ async fn test_get_author_by_id_success() {
     let app = create_app(state);
 
     let mut request = Request::builder()
-        .uri("/author/id?id=cb70ae91-fc1a-4627-a0f4-c5d3523ec5b0")
+        .uri("/publisher/id?id=acd9ec73-901f-45b8-b121-3c78ba845c61")
         .method("GET")
         .body(Body::empty())
         .unwrap();
@@ -55,7 +55,7 @@ async fn test_get_author_by_id_success() {
 
 
 #[tokio::test]
-async fn test_get_author_by_id_failure() {
+async fn test_get_publisher_by_id_failure() {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
@@ -68,7 +68,7 @@ async fn test_get_author_by_id_failure() {
     let app = create_app(state);
 
     let mut request = Request::builder()
-        .uri("/author/id?id=67e55044-10b1-426f-9247-bb680e5fe0c8")
+        .uri("/publisher/id?id=67e55044-10b1-426f-9247-bb680e5fe0c8")
         .method("GET")
         .body(Body::empty())
         .unwrap();
@@ -84,16 +84,16 @@ async fn test_get_author_by_id_failure() {
 
 
 #[tokio::test]
-async fn test_get_author_by_name_success() {
+async fn test_get_publisher_by_name_success() {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
     let pool = create_pool(&database_url).await;
 
-    let author_name = "J. R. R. Tolkien".to_string();
-    let replace_author_name = author_name.clone().replace(" ", "%20");
+    let publisher_name = "Alta Books".to_string();
+    let replace_publisher_name = publisher_name.clone().replace(" ", "%20");
 
-    let uri = format!("/author/name?name={}", replace_author_name);
+    let uri = format!("/publisher/name?name={}", replace_publisher_name);
 
     let state = AppState {
         db_pool: Arc::new(pool),
@@ -116,14 +116,14 @@ async fn test_get_author_by_name_success() {
     assert_eq!(response.status(), StatusCode::OK);
 
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
-    let body: Vec<Author> = serde_json::from_slice(&bytes).unwrap();
+    let body: Vec<Publisher> = serde_json::from_slice(&bytes).unwrap();
 
-    assert_eq!(body[0].get_name(), author_name);
+    assert_eq!(body[0].get_name(), publisher_name);
 }
 
 
 #[tokio::test]
-async fn test_get_author_by_name_failure() {
+async fn test_get_publisher_by_name_failure() {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
@@ -136,7 +136,7 @@ async fn test_get_author_by_name_failure() {
     let app = create_app(state);
 
     let mut request = Request::builder()
-        .uri("/author/name?name=ZZZ")
+        .uri("/publisher/name?name=ZZZ")
         .method("GET")
         .body(Body::empty())
         .unwrap();
@@ -150,7 +150,7 @@ async fn test_get_author_by_name_failure() {
     assert_eq!(response.status(), StatusCode::OK);
 
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
-    let body: Vec<Author> = serde_json::from_slice(&bytes).unwrap();
+    let body: Vec<Publisher> = serde_json::from_slice(&bytes).unwrap();
 
 
     assert_eq!(body, vec![]);
@@ -170,9 +170,11 @@ async fn test_flux_without_image() {
 
     let app = create_app(state);
 
-    // --------------------------- Criando Autor ---------------------------
+    // --------------------------- Criando Editora ---------------------------
 
-    let author_name = String::from("Marion Zimmer Bradley");
+    let publisher_name = String::from("HarperCollins");
+    let publisher_site = String::from("https://harpercollins.com.br/");
+    let publisher_email = String::from("faleconosco@harpercollins.com.br");
     let user_id = Uuid::new_v4();
 
     let boundary = "----boundary123";
@@ -184,14 +186,22 @@ async fn test_flux_without_image() {
         --{boundary}\r\n\
         Content-Disposition: form-data; name=\"user_id\"\r\n\r\n\
         {user_id}\r\n\
+        --{boundary}\r\n\
+        Content-Disposition: form-data; name=\"site\"\r\n\r\n\
+        {site}\r\n\
+        --{boundary}\r\n\
+        Content-Disposition: form-data; name=\"email\"\r\n\r\n\
+        {email}\r\n\
         --{boundary}--\r\n",
         boundary = boundary,
-        name = author_name,
-        user_id = user_id
+        name = publisher_name,
+        user_id = user_id,
+        site = publisher_site,
+        email = publisher_email
     );
 
     let mut request = Request::builder()
-        .uri("/author/create")
+        .uri("/publisher/create")
         .method("POST")
         .header(
             CONTENT_TYPE,
@@ -208,11 +218,11 @@ async fn test_flux_without_image() {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    // --------------------------- Selecionando autor ---------------------------
+    // --------------------------- Selecionando editora ---------------------------
 
-    let replace_author_name = author_name.clone().replace(" ", "%20");
+    let replace_publisher_name = publisher_name.clone().replace(" ", "%20");
 
-    let uri = format!("/author/name?name={}", replace_author_name);
+    let uri = format!("/publisher/name?name={}", replace_publisher_name);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -229,15 +239,15 @@ async fn test_flux_without_image() {
     assert_eq!(response.status(), StatusCode::OK);
 
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
-    let body: Vec<Author> = serde_json::from_slice(&bytes).unwrap();
+    let body: Vec<Publisher> = serde_json::from_slice(&bytes).unwrap();
 
-    assert_eq!(body[0].get_name(), author_name);
+    assert_eq!(body[0].get_name(), publisher_name);
 
-    // --------------------------- Alterando autor ---------------------------
+    // --------------------------- Alterando editora ---------------------------
 
-    let new_author_name = String::from("Marion Z. Bradley");
+    let new_publisher_name = String::from("HarperCollins Brasil");
 
-    let author_id = body[0].get_id();
+    let publisher_id = body[0].get_id();
 
     let body = format!(
         "--{boundary}\r\n\
@@ -251,13 +261,13 @@ async fn test_flux_without_image() {
         {user_id}\r\n\
         --{boundary}--\r\n",
         boundary = boundary,
-        id = author_id,
-        name = new_author_name,
+        id = publisher_id,
+        name = new_publisher_name,
         user_id = user_id
     );
 
     let mut request = Request::builder()
-        .uri("/author/alter")
+        .uri("/publisher/alter")
         .method("PUT")
         .header(
             CONTENT_TYPE,
@@ -274,9 +284,9 @@ async fn test_flux_without_image() {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    // --------------------------- Deletar autor ---------------------------
+    // --------------------------- Deletar editora ---------------------------
 
-    let uri = format!("/author/delete?id={}&user_id={}", author_id, user_id);
+    let uri = format!("/publisher/delete?id={}&user_id={}", publisher_id, user_id);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -292,10 +302,10 @@ async fn test_flux_without_image() {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    // --------------------------- Limpando registros deletados da tabela de gênero ---------------------------
+    // --------------------------- Limpando registros deletados da tabela de editora ---------------------------
 
     let mut request = Request::builder()
-        .uri("/author/clear_deleted")
+        .uri("/publisher/clear_deleted")
         .method("GET")
         .body(Body::empty())
         .unwrap();
@@ -311,7 +321,7 @@ async fn test_flux_without_image() {
 
 
 #[tokio::test]
-async fn test_complete_author_flux_with_images() {
+async fn test_complete_publisher_flux_with_images() {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
@@ -323,11 +333,13 @@ async fn test_complete_author_flux_with_images() {
 
     let app = create_app(state);
 
-    // --------------------------- Criando Autor ---------------------------
+    // --------------------------- Criando Editora ---------------------------
 
-    let author_name = String::from("Robert E. Howard");
+    let publisher_name = String::from("Gen");
+    let publisher_site = String::from("https://www.grupogen.com/");
+    let publisher_email = String::from("ltc@grupogen.com");
     let user_id = Uuid::new_v4();
-    let avatar_file_name = "Robert E Howard 1";
+    let avatar_file_name = "gen_logo";
     let avatar_path = format!("{}/{}.png", TEST_IMAGE_PATH, avatar_file_name);
     let avatar = read(&avatar_path).unwrap();
 
@@ -339,7 +351,7 @@ async fn test_complete_author_flux_with_images() {
         &mut body,
         "--{}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\n{}\r\n",
         boundary,
-        author_name
+        publisher_name
     ).unwrap();
 
     write!(
@@ -347,6 +359,20 @@ async fn test_complete_author_flux_with_images() {
         "--{}\r\nContent-Disposition: form-data; name=\"user_id\"\r\n\r\n{}\r\n",
         boundary,
         user_id
+    ).unwrap();
+
+    write!(
+        &mut body,
+        "--{}\r\nContent-Disposition: form-data; name=\"site\"\r\n\r\n{}\r\n",
+        boundary,
+        publisher_site
+    ).unwrap();
+
+    write!(
+        &mut body,
+        "--{}\r\nContent-Disposition: form-data; name=\"email\"\r\n\r\n{}\r\n",
+        boundary,
+        publisher_email
     ).unwrap();
 
     write!(
@@ -363,7 +389,7 @@ async fn test_complete_author_flux_with_images() {
     write!(&mut body, "--{}--\r\n", boundary).unwrap();
 
     let mut request = Request::builder()
-        .uri("/author/create")
+        .uri("/publisher/create")
         .method("POST")
         .header(
             CONTENT_TYPE,
@@ -380,11 +406,11 @@ async fn test_complete_author_flux_with_images() {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    // --------------------------- Selecionando autor ---------------------------
+    // --------------------------- Selecionando Editora ---------------------------
 
-    let replace_author_name = author_name.clone().replace(" ", "%20");
+    let replace_publisher_name = publisher_name.clone().replace(" ", "%20");
 
-    let uri = format!("/author/name?name={}", replace_author_name);
+    let uri = format!("/publisher/name?name={}", replace_publisher_name);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -401,18 +427,20 @@ async fn test_complete_author_flux_with_images() {
     assert_eq!(response.status(), StatusCode::OK);
 
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
-    let body: Vec<Author> = serde_json::from_slice(&bytes).unwrap();
+    let body: Vec<Publisher> = serde_json::from_slice(&bytes).unwrap();
 
-    assert_eq!(body[0].get_name(), author_name);
+    assert_eq!(body[0].get_name(), publisher_name);
 
-    // --------------------------- Alterando autor ---------------------------
+    // --------------------------- Alterando editora ---------------------------
 
-    let new_author_name = String::from("Robert Ervin Howard");
-    let new_avatar_file_name = "Robert E Howard 2";
+    let new_publisher_name = String::from("GEN LTC");
+    let new_publisher_site = String::from("https://www.grupogen.com.br/");
+    let new_publisher_email = String::from("ltc@grupogen.com.br");
+    let new_avatar_file_name = "gen_logo_2";
     let new_avatar_path = format!("{}/{}.png", TEST_IMAGE_PATH, new_avatar_file_name);
     let new_avatar = read(&new_avatar_path).unwrap();
 
-    let author_id = body[0].get_id();
+    let publisher_id = body[0].get_id();
 
     let mut body = BytesMut::new();
 
@@ -420,14 +448,14 @@ async fn test_complete_author_flux_with_images() {
         &mut body,
         "--{}\r\nContent-Disposition: form-data; name=\"id\"\r\n\r\n{}\r\n",
         boundary,
-        author_id
+        publisher_id
     ).unwrap();
 
     write!(
         &mut body,
         "--{}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\n{}\r\n",
         boundary,
-        new_author_name
+        new_publisher_name
     ).unwrap();
 
     write!(
@@ -435,6 +463,20 @@ async fn test_complete_author_flux_with_images() {
         "--{}\r\nContent-Disposition: form-data; name=\"user_id\"\r\n\r\n{}\r\n",
         boundary,
         user_id
+    ).unwrap();
+
+    write!(
+        &mut body,
+        "--{}\r\nContent-Disposition: form-data; name=\"site\"\r\n\r\n{}\r\n",
+        boundary,
+        new_publisher_site
+    ).unwrap();
+
+    write!(
+        &mut body,
+        "--{}\r\nContent-Disposition: form-data; name=\"email\"\r\n\r\n{}\r\n",
+        boundary,
+        new_publisher_email
     ).unwrap();
 
     write!(
@@ -451,7 +493,7 @@ async fn test_complete_author_flux_with_images() {
     write!(&mut body, "--{}--\r\n", boundary).unwrap();
 
     let mut request = Request::builder()
-        .uri("/author/alter")
+        .uri("/publisher/alter")
         .method("PUT")
         .header(
             CONTENT_TYPE,
@@ -468,9 +510,9 @@ async fn test_complete_author_flux_with_images() {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    // --------------------------- Deletar autor ---------------------------
+    // --------------------------- Deletar editora ---------------------------
 
-    let uri = format!("/author/delete?id={}&user_id={}", author_id, user_id);
+    let uri = format!("/publisher/delete?id={}&user_id={}", publisher_id, user_id);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -486,10 +528,10 @@ async fn test_complete_author_flux_with_images() {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    // --------------------------- Limpando registros deletados da tabela de autores ---------------------------
+    // --------------------------- Limpando registros deletados da tabela de editora ---------------------------
 
     let mut request = Request::builder()
-        .uri("/author/clear_deleted")
+        .uri("/publisher/clear_deleted")
         .method("GET")
         .body(Body::empty())
         .unwrap();
@@ -505,7 +547,7 @@ async fn test_complete_author_flux_with_images() {
 
 
 #[tokio::test]
-async fn test_create_author_without_image_edit_add_image() {
+async fn test_create_publisher_without_image_edit_add_image() {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
@@ -517,9 +559,11 @@ async fn test_create_author_without_image_edit_add_image() {
 
     let app = create_app(state);
 
-    // --------------------------- Criando Autor ---------------------------
+    // --------------------------- Criando Editora ---------------------------
 
-    let author_name = String::from("George MacDonald");
+    let publisher_name = String::from("Planeta Minotauro");
+    let publisher_site = String::from("https://www.planetadelivros.com.br/editorial/planeta-minotauro/540");
+    let publisher_email = String::from("imprensa@editoraplaneta.com.br");
     let user_id = Uuid::new_v4();
 
     let boundary = "----boundary123";
@@ -531,14 +575,22 @@ async fn test_create_author_without_image_edit_add_image() {
         --{boundary}\r\n\
         Content-Disposition: form-data; name=\"user_id\"\r\n\r\n\
         {user_id}\r\n\
+        --{boundary}\r\n\
+        Content-Disposition: form-data; name=\"site\"\r\n\r\n\
+        {site}\r\n\
+        --{boundary}\r\n\
+        Content-Disposition: form-data; name=\"email\"\r\n\r\n\
+        {email}\r\n\
         --{boundary}--\r\n",
         boundary = boundary,
-        name = author_name,
-        user_id = user_id
+        name = publisher_name,
+        user_id = user_id,
+        site = publisher_site,
+        email = publisher_email
     );
 
     let mut request = Request::builder()
-        .uri("/author/create")
+        .uri("/publisher/create")
         .method("POST")
         .header(
             CONTENT_TYPE,
@@ -555,11 +607,11 @@ async fn test_create_author_without_image_edit_add_image() {
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    // --------------------------- Selecionando autor ---------------------------
+    // --------------------------- Selecionando editora ---------------------------
 
-    let replace_author_name = author_name.clone().replace(" ", "%20");
+    let replace_publisher_name = publisher_name.clone().replace(" ", "%20");
 
-    let uri = format!("/author/name?name={}", replace_author_name);
+    let uri = format!("/publisher/name?name={}", replace_publisher_name);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -576,17 +628,17 @@ async fn test_create_author_without_image_edit_add_image() {
     assert_eq!(response.status(), StatusCode::OK);
 
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
-    let body: Vec<Author> = serde_json::from_slice(&bytes).unwrap();
+    let body: Vec<Publisher> = serde_json::from_slice(&bytes).unwrap();
 
-    assert_eq!(body[0].get_name(), author_name);
+    assert_eq!(body[0].get_name(), publisher_name);
 
-    // --------------------------- Alterando autor ---------------------------
+    // --------------------------- Alterando editora ---------------------------
 
-    let avatar_file_name = "George MacDonald";
+    let avatar_file_name = "minotauro_logo";
     let avatar_path = format!("{}/{}.png", TEST_IMAGE_PATH, avatar_file_name);
     let avatar = read(&avatar_path).unwrap();
 
-    let author_id = body[0].get_id();
+    let publisher_id = body[0].get_id();
 
     let mut body = BytesMut::new();
 
@@ -594,14 +646,14 @@ async fn test_create_author_without_image_edit_add_image() {
         &mut body,
         "--{}\r\nContent-Disposition: form-data; name=\"id\"\r\n\r\n{}\r\n",
         boundary,
-        author_id
+        publisher_id
     ).unwrap();
 
     write!(
         &mut body,
         "--{}\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\n{}\r\n",
         boundary,
-        author_name
+        publisher_name
     ).unwrap();
 
     write!(
@@ -625,7 +677,7 @@ async fn test_create_author_without_image_edit_add_image() {
     write!(&mut body, "--{}--\r\n", boundary).unwrap();
 
     let mut request = Request::builder()
-        .uri("/author/alter")
+        .uri("/publisher/alter")
         .method("PUT")
         .header(
             CONTENT_TYPE,
@@ -642,9 +694,9 @@ async fn test_create_author_without_image_edit_add_image() {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    // --------------------------- Deletar autor ---------------------------
+    // --------------------------- Deletar editora ---------------------------
 
-    let uri = format!("/author/delete?id={}&user_id={}", author_id, user_id);
+    let uri = format!("/publisher/delete?id={}&user_id={}", publisher_id, user_id);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -660,10 +712,10 @@ async fn test_create_author_without_image_edit_add_image() {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    // --------------------------- Limpando registros deletados da tabela de autores ---------------------------
+    // --------------------------- Limpando registros deletados da tabela de editora ---------------------------
 
     let mut request = Request::builder()
-        .uri("/author/clear_deleted")
+        .uri("/publisher/clear_deleted")
         .method("GET")
         .body(Body::empty())
         .unwrap();

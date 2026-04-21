@@ -189,6 +189,234 @@ mod tests {
         check_author_table_schema(database_url).await;
     }
 
+
+    async fn check_author_image_table_schema(database_url: String) {
+
+        let pool: Pool<Postgres> = create_pool(&database_url).await;
+
+        let table: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'author_image'
+        );").fetch_one(&pool).await.unwrap();
+
+        assert!(table.0);
+
+        let schema = query(r#"
+            SELECT
+                column_name,
+                data_type
+            FROM
+                information_schema.columns
+            WHERE
+                table_name = 'author_image'
+            ORDER BY column_name ASC;
+        "#).fetch_all(&pool).await.unwrap();
+
+        assert_eq!(schema.len(), 5);
+
+        let column_name: String = schema[0].get("column_name");
+        let data_type: String = schema[0].get("data_type");
+
+        assert_eq!(column_name, "author_id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[1].get("column_name");
+        let data_type: String = schema[1].get("data_type");
+
+        assert_eq!(column_name, "deleted".to_string());
+        assert_eq!(data_type, "boolean".to_string());
+
+        let column_name: String = schema[2].get("column_name");
+        let data_type: String = schema[2].get("data_type");
+
+        assert_eq!(column_name, "id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[3].get("column_name");
+        let data_type: String = schema[3].get("data_type");
+
+        assert_eq!(column_name, "image_path".to_string());
+        assert_eq!(data_type, "text".to_string());
+
+        let column_name: String = schema[4].get("column_name");
+        let data_type: String = schema[4].get("data_type");
+
+        assert_eq!(column_name, "original_name".to_string());
+        assert_eq!(data_type, "character varying".to_string());
+    }
+
+    #[tokio::test]
+    async fn test_check_author_image_table() {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL")
+            .expect("Variável de ambiente DATABASE_URL não definida");
+
+        check_author_image_table_schema(database_url).await;
+    }
+
+    #[tokio::test]
+    async fn test_check_author_image_image_test_table() {
+        dotenv().ok();
+        let database_url = env::var("TESTE_DATABASE_URL")
+            .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
+
+        check_author_image_table_schema(database_url).await;
+    }
+
+
+    async fn check_publisher_table_schema(database_url: String) {
+
+        let pool: Pool<Postgres> = create_pool(&database_url).await;
+
+        let table: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'publisher'
+        );").fetch_one(&pool).await.unwrap();
+
+        assert!(table.0);
+
+        let schema = query(r#"
+            SELECT
+                column_name,
+                data_type
+            FROM
+                information_schema.columns
+            WHERE
+                table_name = 'publisher'
+            ORDER BY column_name ASC;
+        "#).fetch_all(&pool).await.unwrap();
+
+        assert_eq!(schema.len(), 5);
+
+        let column_name: String = schema[0].get("column_name");
+        let data_type: String = schema[0].get("data_type");
+
+        assert_eq!(column_name, "deleted".to_string());
+        assert_eq!(data_type, "boolean".to_string());
+
+        let column_name: String = schema[1].get("column_name");
+        let data_type: String = schema[1].get("data_type");
+
+        assert_eq!(column_name, "email".to_string());
+        assert_eq!(data_type, "character varying".to_string());
+
+        let column_name: String = schema[2].get("column_name");
+        let data_type: String = schema[2].get("data_type");
+
+        assert_eq!(column_name, "id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[3].get("column_name");
+        let data_type: String = schema[3].get("data_type");
+
+        assert_eq!(column_name, "name".to_string());
+        assert_eq!(data_type, "character varying".to_string());
+
+        let column_name: String = schema[4].get("column_name");
+        let data_type: String = schema[4].get("data_type");
+
+        assert_eq!(column_name, "site".to_string());
+        assert_eq!(data_type, "character varying".to_string());
+    }
+
+    #[tokio::test]
+    async fn test_check_publisher_table() {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL")
+            .expect("Variável de ambiente DATABASE_URL não definida");
+
+        check_publisher_table_schema(database_url).await;
+    }
+
+    #[tokio::test]
+    async fn test_check_publisher_test_table() {
+        dotenv().ok();
+        let database_url = env::var("TESTE_DATABASE_URL")
+            .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
+
+        check_publisher_table_schema(database_url).await;
+    }
+
+
+    async fn check_publisher_image_table_schema(database_url: String) {
+
+        let pool: Pool<Postgres> = create_pool(&database_url).await;
+
+        let table: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'publisher_image'
+        );").fetch_one(&pool).await.unwrap();
+
+        assert!(table.0);
+
+        let schema = query(r#"
+            SELECT
+                column_name,
+                data_type
+            FROM
+                information_schema.columns
+            WHERE
+                table_name = 'publisher_image'
+            ORDER BY column_name ASC;
+        "#).fetch_all(&pool).await.unwrap();
+
+        assert_eq!(schema.len(), 5);
+
+        let column_name: String = schema[0].get("column_name");
+        let data_type: String = schema[0].get("data_type");
+
+        assert_eq!(column_name, "deleted".to_string());
+        assert_eq!(data_type, "boolean".to_string());
+
+        let column_name: String = schema[1].get("column_name");
+        let data_type: String = schema[1].get("data_type");
+
+        assert_eq!(column_name, "id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[2].get("column_name");
+        let data_type: String = schema[2].get("data_type");
+
+        assert_eq!(column_name, "image_path".to_string());
+        assert_eq!(data_type, "text".to_string());
+
+        let column_name: String = schema[3].get("column_name");
+        let data_type: String = schema[3].get("data_type");
+
+        assert_eq!(column_name, "original_name".to_string());
+        assert_eq!(data_type, "character varying".to_string());
+
+        let column_name: String = schema[4].get("column_name");
+        let data_type: String = schema[4].get("data_type");
+
+        assert_eq!(column_name, "publisher_id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+    }
+
+    #[tokio::test]
+    async fn test_check_publisher_image_table() {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL")
+            .expect("Variável de ambiente DATABASE_URL não definida");
+
+        check_publisher_image_table_schema(database_url).await;
+    }
+
+    #[tokio::test]
+    async fn test_check_publisher_image_test_table() {
+        dotenv().ok();
+        let database_url = env::var("TESTE_DATABASE_URL")
+            .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
+
+        check_publisher_image_table_schema(database_url).await;
+    }
+
     // #[tokio::test]
     // async fn test_check_user_table() {
     //     // Confere existência das tabelas
@@ -256,24 +484,6 @@ mod tests {
     //         FROM information_schema.tables 
     //         WHERE table_schema = 'public' 
     //         AND table_name = 'substring_index'
-    //     );").fetch_one(&pool).await.unwrap();
-
-    //     assert!(table_result.0);
-    // }
-
-    // #[tokio::test]
-    // async fn test_check_publisher_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
-
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'publisher'
     //     );").fetch_one(&pool).await.unwrap();
 
     //     assert!(table_result.0);
