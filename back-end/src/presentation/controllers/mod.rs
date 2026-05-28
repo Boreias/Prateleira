@@ -2,3 +2,4 @@
 pub mod author_controller;
 pub mod gender_controller;
 pub mod publisher_controller;
+pub mod book_controller;

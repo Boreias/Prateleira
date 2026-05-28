@@ -3,6 +3,7 @@
 .env
 /back-end/tests/images/author/*
 /back-end/tests/images/publisher/*
+/back-end/tests/images/book/*
 /back-end/src/infrastructure/uploads/images/author/*
 /back-end/src/infrastructure/uploads/images/book/*
 /back-end/src/infrastructure/uploads/images/publisher/*

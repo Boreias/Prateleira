@@ -2,3 +2,4 @@
 pub mod author_service;
 pub mod gender_service;
 pub mod publisher_service;
+pub mod book_service;

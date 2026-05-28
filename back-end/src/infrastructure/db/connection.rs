@@ -417,230 +417,343 @@ mod tests {
         check_publisher_image_table_schema(database_url).await;
     }
 
-    // #[tokio::test]
-    // async fn test_check_user_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'user'
-    //     );").fetch_one(&pool).await.unwrap();
+    async fn check_book_table_schema(database_url: String) {
 
-    //     assert!(table_result.0);
-    // }
+        let pool: Pool<Postgres> = create_pool(&database_url).await;
 
-    // #[tokio::test]
-    // async fn test_check_search_index_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        let table: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'book'
+        );").fetch_one(&pool).await.unwrap();
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'search_index'
-    //     );").fetch_one(&pool).await.unwrap();
+        assert!(table.0);
 
-    //     assert!(table_result.0);
-    // }
+        let schema = query(r#"
+            SELECT
+                column_name,
+                data_type
+            FROM
+                information_schema.columns
+            WHERE
+                table_name = 'book'
+            ORDER BY column_name ASC;
+        "#).fetch_all(&pool).await.unwrap();
 
-    // #[tokio::test]
-    // async fn test_check_user_password_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        assert_eq!(schema.len(), 13);
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'user_password'
-    //     );").fetch_one(&pool).await.unwrap();
+        let column_name: String = schema[0].get("column_name");
+        let data_type: String = schema[0].get("data_type");
 
-    //     assert!(table_result.0);
-    // }
+        assert_eq!(column_name, "deleted".to_string());
+        assert_eq!(data_type, "boolean".to_string());
 
-    // #[tokio::test]
-    // async fn test_check_substring_index_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        let column_name: String = schema[1].get("column_name");
+        let data_type: String = schema[1].get("data_type");
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'substring_index'
-    //     );").fetch_one(&pool).await.unwrap();
+        assert_eq!(column_name, "edition".to_string());
+        assert_eq!(data_type, "integer".to_string());
 
-    //     assert!(table_result.0);
-    // }
+        let column_name: String = schema[2].get("column_name");
+        let data_type: String = schema[2].get("data_type");
 
-    // #[tokio::test]
-    // async fn test_check_book_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        assert_eq!(column_name, "id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'book'
-    //     );").fetch_one(&pool).await.unwrap();
+        let column_name: String = schema[3].get("column_name");
+        let data_type: String = schema[3].get("data_type");
 
-    //     assert!(table_result.0);
-    // }
+        assert_eq!(column_name, "isbn".to_string());
+        assert_eq!(data_type, "character varying".to_string());
 
-    // #[tokio::test]
-    // async fn test_check_book_author_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        let column_name: String = schema[4].get("column_name");
+        let data_type: String = schema[4].get("data_type");
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'book_author'
-    //     );").fetch_one(&pool).await.unwrap();
+        assert_eq!(column_name, "language".to_string());
+        assert_eq!(data_type, "character varying".to_string());
 
-    //     assert!(table_result.0);
-    // }
+        let column_name: String = schema[5].get("column_name");
+        let data_type: String = schema[5].get("data_type");
 
-    // #[tokio::test]
-    // async fn test_check_book_gender_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        assert_eq!(column_name, "pages".to_string());
+        assert_eq!(data_type, "integer".to_string());
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'book_gender'
-    //     );").fetch_one(&pool).await.unwrap();
+        let column_name: String = schema[6].get("column_name");
+        let data_type: String = schema[6].get("data_type");
 
-    //     assert!(table_result.0);
-    // }
+        assert_eq!(column_name, "publication_year".to_string());
+        assert_eq!(data_type, "integer".to_string());
 
-    // #[tokio::test]
-    // async fn test_check_reading_status_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        let column_name: String = schema[7].get("column_name");
+        let data_type: String = schema[7].get("data_type");
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'reading_status'
-    //     );").fetch_one(&pool).await.unwrap();
+        assert_eq!(column_name, "publisher_id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
 
-    //     assert!(table_result.0);
-    // }
+        let column_name: String = schema[8].get("column_name");
+        let data_type: String = schema[8].get("data_type");
 
-    // #[tokio::test]
-    // async fn test_check_book_user_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        assert_eq!(column_name, "series_collection".to_string());
+        assert_eq!(data_type, "integer".to_string());
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'book_user'
-    //     );").fetch_one(&pool).await.unwrap();
+        let column_name: String = schema[9].get("column_name");
+        let data_type: String = schema[9].get("data_type");
 
-    //     assert!(table_result.0);
-    // }
+        assert_eq!(column_name, "subtitle".to_string());
+        assert_eq!(data_type, "character varying".to_string());
 
-    // #[tokio::test]
-    // async fn test_check_user_friend_request_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        let column_name: String = schema[10].get("column_name");
+        let data_type: String = schema[10].get("data_type");
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'user_friend_request'
-    //     );").fetch_one(&pool).await.unwrap();
+        assert_eq!(column_name, "synopsis".to_string());
+        assert_eq!(data_type, "text".to_string());
 
-    //     assert!(table_result.0);
-    // }
+        let column_name: String = schema[11].get("column_name");
+        let data_type: String = schema[11].get("data_type");
 
-    // #[tokio::test]
-    // async fn test_check_user_friendship_table() {
-    //     // Confere existência das tabelas
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+        assert_eq!(column_name, "title".to_string());
+        assert_eq!(data_type, "character varying".to_string());
 
-    //     let table_result: (bool,) = query_as("SELECT EXISTS (
-    //         SELECT 1 
-    //         FROM information_schema.tables 
-    //         WHERE table_schema = 'public' 
-    //         AND table_name = 'user_friendship'
-    //     );").fetch_one(&pool).await.unwrap();
+        let column_name: String = schema[12].get("column_name");
+        let data_type: String = schema[12].get("data_type");
 
-    //     assert!(table_result.0);
-    // }
+        assert_eq!(column_name, "volume".to_string());
+        assert_eq!(data_type, "integer".to_string());
+    }
 
-    // #[tokio::test]
-    // async fn test_table_author() {
-    //     dotenv().ok();
-    //     let database_url = env::var("DATABASE_URL")
-    //         .expect("Variável de ambiente DATABASE_URL não definida");
-    //     let pool = create_pool(&database_url).await;
+    #[tokio::test]
+    async fn test_check_book_table() {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL")
+            .expect("Variável de ambiente DATABASE_URL não definida");
 
-    //     let id = Uuid::new_v4();
-    //     let author_name = "Teste Nome".to_string();
+        check_book_table_schema(database_url).await;
+    }
 
-    //     let create_result = query("INSERT INTO Author (id, name) VALUES ($1, $2)")
-    //         .bind(id.clone().to_string())
-    //         .bind(author_name.clone())
-    //         .execute(&pool)
-    //         .await
-    //         .map_err(|e| e.to_string()).unwrap();
+    #[tokio::test]
+    async fn test_check_book_test_table() {
+        dotenv().ok();
+        let database_url = env::var("TESTE_DATABASE_URL")
+            .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
 
-    //     assert_eq!(create_result.rows_affected(), 1);
+        check_book_table_schema(database_url).await;
+    }
 
-    //     let select_result: Vec<AuthorRow> = query_as("SELECT id, name FROM Author WHERE id = ?")
-    //         .bind(id.clone().to_string())
-    //         .fetch_all(&pool)
-    //         .await
-    //         .unwrap();
 
-    //     assert_eq!(select_result.len(), 1);
-    //     assert_eq!(select_result[0].name, author_name);
-    // }
+    async fn check_book_image_table_schema(database_url: String) {
+
+        let pool: Pool<Postgres> = create_pool(&database_url).await;
+
+        let table: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'book_image'
+        );").fetch_one(&pool).await.unwrap();
+
+        assert!(table.0);
+
+        let schema = query(r#"
+            SELECT
+                column_name,
+                data_type
+            FROM
+                information_schema.columns
+            WHERE
+                table_name = 'book_image'
+            ORDER BY column_name ASC;
+        "#).fetch_all(&pool).await.unwrap();
+
+        assert_eq!(schema.len(), 5);
+
+        let column_name: String = schema[0].get("column_name");
+        let data_type: String = schema[0].get("data_type");
+
+        assert_eq!(column_name, "book_id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[1].get("column_name");
+        let data_type: String = schema[1].get("data_type");
+
+        assert_eq!(column_name, "deleted".to_string());
+        assert_eq!(data_type, "boolean".to_string());
+
+        let column_name: String = schema[2].get("column_name");
+        let data_type: String = schema[2].get("data_type");
+
+        assert_eq!(column_name, "id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[3].get("column_name");
+        let data_type: String = schema[3].get("data_type");
+
+        assert_eq!(column_name, "image_path".to_string());
+        assert_eq!(data_type, "text".to_string());
+
+        let column_name: String = schema[4].get("column_name");
+        let data_type: String = schema[4].get("data_type");
+
+        assert_eq!(column_name, "original_name".to_string());
+        assert_eq!(data_type, "character varying".to_string());
+    }
+
+    #[tokio::test]
+    async fn test_check_book_image_table() {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL")
+            .expect("Variável de ambiente DATABASE_URL não definida");
+
+        check_book_image_table_schema(database_url).await;
+    }
+
+    #[tokio::test]
+    async fn test_check_book_image_test_table() {
+        dotenv().ok();
+        let database_url = env::var("TESTE_DATABASE_URL")
+            .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
+
+        check_book_image_table_schema(database_url).await;
+    }
+
+
+    async fn check_book_gender_table_schema(database_url: String) {
+
+        let pool: Pool<Postgres> = create_pool(&database_url).await;
+
+        let table: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'book_gender'
+        );").fetch_one(&pool).await.unwrap();
+
+        assert!(table.0);
+
+        let schema = query(r#"
+            SELECT
+                column_name,
+                data_type
+            FROM
+                information_schema.columns
+            WHERE
+                table_name = 'book_gender'
+            ORDER BY column_name ASC;
+        "#).fetch_all(&pool).await.unwrap();
+
+        assert_eq!(schema.len(), 4);
+
+        let column_name: String = schema[0].get("column_name");
+        let data_type: String = schema[0].get("data_type");
+
+        assert_eq!(column_name, "book_id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[1].get("column_name");
+        let data_type: String = schema[1].get("data_type");
+
+        assert_eq!(column_name, "deleted".to_string());
+        assert_eq!(data_type, "boolean".to_string());
+
+        let column_name: String = schema[2].get("column_name");
+        let data_type: String = schema[2].get("data_type");
+
+        assert_eq!(column_name, "gender_id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[3].get("column_name");
+        let data_type: String = schema[3].get("data_type");
+
+        assert_eq!(column_name, "id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+    }
+
+    #[tokio::test]
+    async fn test_check_book_gender_table() {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL")
+            .expect("Variável de ambiente DATABASE_URL não definida");
+
+        check_book_gender_table_schema(database_url).await;
+    }
+
+    #[tokio::test]
+    async fn test_check_book_gender_test_table() {
+        dotenv().ok();
+        let database_url = env::var("TESTE_DATABASE_URL")
+            .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
+
+        check_book_gender_table_schema(database_url).await;
+    }
+
+
+    async fn check_book_author_table_schema(database_url: String) {
+
+        let pool: Pool<Postgres> = create_pool(&database_url).await;
+
+        let table: (bool,) = query_as("SELECT EXISTS (
+            SELECT 1 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'book_author'
+        );").fetch_one(&pool).await.unwrap();
+
+        assert!(table.0);
+
+        let schema = query(r#"
+            SELECT
+                column_name,
+                data_type
+            FROM
+                information_schema.columns
+            WHERE
+                table_name = 'book_author'
+            ORDER BY column_name ASC;
+        "#).fetch_all(&pool).await.unwrap();
+
+        assert_eq!(schema.len(), 4);
+
+        let column_name: String = schema[0].get("column_name");
+        let data_type: String = schema[0].get("data_type");
+
+        assert_eq!(column_name, "author_id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[1].get("column_name");
+        let data_type: String = schema[1].get("data_type");
+
+        assert_eq!(column_name, "book_id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+
+        let column_name: String = schema[2].get("column_name");
+        let data_type: String = schema[2].get("data_type");
+
+        assert_eq!(column_name, "deleted".to_string());
+        assert_eq!(data_type, "boolean".to_string());
+
+        let column_name: String = schema[3].get("column_name");
+        let data_type: String = schema[3].get("data_type");
+
+        assert_eq!(column_name, "id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
+    }
+
+    #[tokio::test]
+    async fn test_check_book_author_table() {
+        dotenv().ok();
+        let database_url = env::var("DATABASE_URL")
+            .expect("Variável de ambiente DATABASE_URL não definida");
+
+        check_book_author_table_schema(database_url).await;
+    }
+
+    #[tokio::test]
+    async fn test_check_book_author_test_table() {
+        dotenv().ok();
+        let database_url = env::var("TESTE_DATABASE_URL")
+            .expect("Variável de ambiente TESTE_DATABASE_URL não definida");
+
+        check_book_author_table_schema(database_url).await;
+    }
 }

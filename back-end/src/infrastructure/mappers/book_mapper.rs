@@ -18,7 +18,7 @@ impl From<BookRow> for Book {
             row.isbn,
             Vec::new(),
             row.synopsis,
-            row.cover
+            None
         )
     }
 }

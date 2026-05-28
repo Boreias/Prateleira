@@ -6,7 +6,8 @@ use axum::{
         Request, StatusCode,
         header::CONTENT_TYPE
     },
-    extract::{ConnectInfo}
+    extract::{ConnectInfo},
+    Router
 };
 use mime::APPLICATION_JSON;
 use dotenv::dotenv;
@@ -21,8 +22,7 @@ use back_end::presentation::routes::create_app;
 use back_end::domain::entities::gender::Gender;
 
 
-#[tokio::test]
-async fn test_get_gender_by_id_success() {
+async fn create_app_to_test() -> Router {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
@@ -33,6 +33,14 @@ async fn test_get_gender_by_id_success() {
     };
 
     let app = create_app(state);
+
+    return app
+}
+
+
+#[tokio::test]
+async fn test_get_gender_by_id_success() {
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/gender/id?id=ae7df38c-8328-4077-ad2c-9670f11a9aad")
@@ -56,16 +64,7 @@ async fn test_get_gender_by_id_success() {
 
 #[tokio::test]
 async fn test_get_gender_by_id_failure() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/gender/id?id=67e55044-10b1-426f-9247-bb680e5fe0c8")
@@ -84,20 +83,11 @@ async fn test_get_gender_by_id_failure() {
 
 #[tokio::test]
 async fn test_get_gender_by_name_success() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
+    let app = create_app_to_test().await;
 
     let gender_name = "Fantasia".to_string();
 
     let uri = format!("/gender/name?name={}", gender_name.clone());
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -121,16 +111,7 @@ async fn test_get_gender_by_name_success() {
 
 #[tokio::test]
 async fn test_get_gender_by_name_failure() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/gender/name?name=ZZZ")
@@ -154,16 +135,7 @@ async fn test_get_gender_by_name_failure() {
 
 #[tokio::test]
 async fn test_complete_gender_flux() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     // --------------------------- Criando gênero ---------------------------
 
