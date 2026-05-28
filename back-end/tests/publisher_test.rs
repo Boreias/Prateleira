@@ -8,7 +8,8 @@ use axum::{
         Request, StatusCode,
         header::CONTENT_TYPE
     },
-    extract::{ConnectInfo}
+    extract::{ConnectInfo},
+    Router
 };
 use bytes::BytesMut;
 use dotenv::dotenv;
@@ -25,8 +26,7 @@ use back_end::domain::entities::publisher::Publisher;
 const TEST_IMAGE_PATH: &str = "./tests/images/publisher";
 
 
-#[tokio::test]
-async fn test_get_publisher_by_id_success() {
+async fn create_app_to_test() -> Router {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
@@ -37,6 +37,14 @@ async fn test_get_publisher_by_id_success() {
     };
 
     let app = create_app(state);
+
+    return app
+}
+
+
+#[tokio::test]
+async fn test_get_publisher_by_id_success() {
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/publisher/id?id=acd9ec73-901f-45b8-b121-3c78ba845c61")
@@ -51,21 +59,17 @@ async fn test_get_publisher_by_id_success() {
     let response = app.oneshot(request).await.unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Publisher = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body.get_name(), "Alta Books".to_string());
 }
 
 
 #[tokio::test]
 async fn test_get_publisher_by_id_failure() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/publisher/id?id=67e55044-10b1-426f-9247-bb680e5fe0c8")
@@ -85,21 +89,12 @@ async fn test_get_publisher_by_id_failure() {
 
 #[tokio::test]
 async fn test_get_publisher_by_name_success() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
+    let app = create_app_to_test().await;
 
     let publisher_name = "Alta Books".to_string();
     let replace_publisher_name = publisher_name.clone().replace(" ", "%20");
 
     let uri = format!("/publisher/name?name={}", replace_publisher_name);
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -124,16 +119,7 @@ async fn test_get_publisher_by_name_success() {
 
 #[tokio::test]
 async fn test_get_publisher_by_name_failure() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/publisher/name?name=ZZZ")
@@ -158,23 +144,104 @@ async fn test_get_publisher_by_name_failure() {
 
 
 #[tokio::test]
+async fn test_get_publisher_by_book() {
+    let app = create_app_to_test().await;
+
+    let book_id = "3dbd31ad-1967-4a1f-97cd-fcf05bfb4185".to_string();
+    let publisher_name = "HarperCollins Brasil".to_string();
+
+    let uri = format!("/publisher/book?book_id={}", book_id);
+
+    let mut request = Request::builder()
+        .uri(&uri)
+        .method("GET")
+        .body(Body::empty())
+        .unwrap();
+
+    request.extensions_mut().insert(
+        ConnectInfo(SocketAddr::from(([127,0,0,1], 3000)))
+    );
+
+    let response = app.clone().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Publisher = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body.get_name(), publisher_name);
+}
+
+
+#[tokio::test]
+async fn test_get_publisher_by_author() {    
+    let app = create_app_to_test().await;
+
+    let author_id = "d309d334-8662-46f0-885e-60ddcb3eec23".to_string();
+    let publisher_name = "Pipoca e Nanquim".to_string();
+
+    let uri = format!("/publisher/author?author_id={}", author_id);
+
+    let mut request = Request::builder()
+        .uri(&uri)
+        .method("GET")
+        .body(Body::empty())
+        .unwrap();
+
+    request.extensions_mut().insert(
+        ConnectInfo(SocketAddr::from(([127,0,0,1], 3000)))
+    );    
+
+    let response = app.clone().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Vec<Publisher> = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body[0].get_name(), publisher_name);
+}
+
+
+#[tokio::test]
+async fn test_get_publisher_by_gender() {
+    let app = create_app_to_test().await;
+
+    let gender_id = "25580202-27b8-4fc5-a13d-c5ff3c36ecf1".to_string();
+    let publisher_name = "Alta Books".to_string();
+
+    let uri = format!("/publisher/gender?gender_id={}", gender_id);
+
+    let mut request = Request::builder()
+        .uri(&uri)
+        .method("GET")
+        .body(Body::empty())
+        .unwrap();
+
+    request.extensions_mut().insert(
+        ConnectInfo(SocketAddr::from(([127,0,0,1], 3000)))
+    );    
+
+    let response = app.clone().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Vec<Publisher> = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body[0].get_name(), publisher_name);
+}
+
+
+#[tokio::test]
 async fn test_flux_without_image() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     // --------------------------- Criando Editora ---------------------------
 
-    let publisher_name = String::from("HarperCollins");
-    let publisher_site = String::from("https://harpercollins.com.br/");
-    let publisher_email = String::from("faleconosco@harpercollins.com.br");
+    let publisher_name = String::from("O'Reilly");
+    let publisher_site = String::from("https://novatec.com.br/");
+    let publisher_email = String::from("novatec@novatec.com.br");
     let user_id = Uuid::new_v4();
 
     let boundary = "----boundary123";
@@ -245,7 +312,7 @@ async fn test_flux_without_image() {
 
     // --------------------------- Alterando editora ---------------------------
 
-    let new_publisher_name = String::from("HarperCollins Brasil");
+    let new_publisher_name = String::from("novatec");
 
     let publisher_id = body[0].get_id();
 
@@ -322,16 +389,7 @@ async fn test_flux_without_image() {
 
 #[tokio::test]
 async fn test_complete_publisher_flux_with_images() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     // --------------------------- Criando Editora ---------------------------
 
@@ -548,21 +606,11 @@ async fn test_complete_publisher_flux_with_images() {
 
 #[tokio::test]
 async fn test_create_publisher_without_image_edit_add_image() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     // --------------------------- Criando Editora ---------------------------
 
     let publisher_name = String::from("Planeta Minotauro");
-    let publisher_site = String::from("https://www.planetadelivros.com.br/editorial/planeta-minotauro/540");
     let publisher_email = String::from("imprensa@editoraplaneta.com.br");
     let user_id = Uuid::new_v4();
 
@@ -576,16 +624,12 @@ async fn test_create_publisher_without_image_edit_add_image() {
         Content-Disposition: form-data; name=\"user_id\"\r\n\r\n\
         {user_id}\r\n\
         --{boundary}\r\n\
-        Content-Disposition: form-data; name=\"site\"\r\n\r\n\
-        {site}\r\n\
-        --{boundary}\r\n\
         Content-Disposition: form-data; name=\"email\"\r\n\r\n\
         {email}\r\n\
         --{boundary}--\r\n",
         boundary = boundary,
         name = publisher_name,
         user_id = user_id,
-        site = publisher_site,
         email = publisher_email
     );
 

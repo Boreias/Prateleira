@@ -8,7 +8,8 @@ use axum::{
         Request, StatusCode,
         header::CONTENT_TYPE
     },
-    extract::{ConnectInfo}
+    extract::{ConnectInfo},
+    Router
 };
 use bytes::BytesMut;
 use dotenv::dotenv;
@@ -25,8 +26,7 @@ use uuid::Uuid;
 const TEST_IMAGE_PATH: &str = "./tests/images/author";
 
 
-#[tokio::test]
-async fn test_get_author_by_id_success() {
+async fn create_app_to_test() -> Router {
     dotenv().ok();
 
     let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
@@ -37,6 +37,14 @@ async fn test_get_author_by_id_success() {
     };
 
     let app = create_app(state);
+
+    return app
+}
+
+
+#[tokio::test]
+async fn test_get_author_by_id_success() {
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/author/id?id=cb70ae91-fc1a-4627-a0f4-c5d3523ec5b0")
@@ -51,21 +59,17 @@ async fn test_get_author_by_id_success() {
     let response = app.oneshot(request).await.unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Author = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body.get_name(), "J. R. R. Tolkien".to_string());
 }
 
 
 #[tokio::test]
 async fn test_get_author_by_id_failure() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/author/id?id=67e55044-10b1-426f-9247-bb680e5fe0c8")
@@ -85,21 +89,12 @@ async fn test_get_author_by_id_failure() {
 
 #[tokio::test]
 async fn test_get_author_by_name_success() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
+    let app = create_app_to_test().await;
 
     let author_name = "J. R. R. Tolkien".to_string();
     let replace_author_name = author_name.clone().replace(" ", "%20");
 
     let uri = format!("/author/name?name={}", replace_author_name);
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
 
     let mut request = Request::builder()
         .uri(&uri)
@@ -124,16 +119,7 @@ async fn test_get_author_by_name_success() {
 
 #[tokio::test]
 async fn test_get_author_by_name_failure() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     let mut request = Request::builder()
         .uri("/author/name?name=ZZZ")
@@ -158,17 +144,98 @@ async fn test_get_author_by_name_failure() {
 
 
 #[tokio::test]
+async fn test_get_authors_by_publisher_success() {
+    let app = create_app_to_test().await;
+
+    let publisher_id = "757ea9a1-ab74-454a-9391-4425c4eb9316".to_string();
+    let author_name = "Michael Moorcock".to_string();
+
+    let uri = format!("/author/publisher?publisher_id={}", publisher_id);
+
+    let mut request = Request::builder()
+        .uri(&uri)
+        .method("GET")
+        .body(Body::empty())
+        .unwrap();
+
+    request.extensions_mut().insert(
+        ConnectInfo(SocketAddr::from(([127,0,0,1], 3000)))
+    );
+
+    let response = app.clone().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Vec<Author> = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body[0].get_name(), author_name);
+}
+
+
+#[tokio::test]
+async fn test_get_authors_by_book_success() {
+    let app = create_app_to_test().await;
+
+    let book_id = "818d509d-5574-4a29-95d3-811b8b7547ea".to_string();
+    let author_name = "Frederick P. Brooks Jr".to_string();
+
+    let uri = format!("/author/book?book_id={}", book_id);
+
+    let mut request = Request::builder()
+        .uri(&uri)
+        .method("GET")
+        .body(Body::empty())
+        .unwrap();
+
+    request.extensions_mut().insert(
+        ConnectInfo(SocketAddr::from(([127,0,0,1], 3000)))
+    );
+
+    let response = app.clone().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Vec<Author> = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body[0].get_name(), author_name);
+}
+
+
+#[tokio::test]
+async fn test_get_authors_by_gender_success() {
+    let app = create_app_to_test().await;
+
+    let gender_id = "9349c148-2233-4fa8-ab44-7e52faac9923".to_string();
+    let author_name = "Robert T. Kiyosaki".to_string();
+
+    let uri = format!("/author/gender?gender_id={}", gender_id);
+
+    let mut request = Request::builder()
+        .uri(&uri)
+        .method("GET")
+        .body(Body::empty())
+        .unwrap();
+
+    request.extensions_mut().insert(
+        ConnectInfo(SocketAddr::from(([127,0,0,1], 3000)))
+    );
+
+    let response = app.clone().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Vec<Author> = serde_json::from_slice(&bytes).unwrap();
+
+    assert_eq!(body[0].get_name(), author_name);
+}
+
+
+#[tokio::test]
 async fn test_flux_without_image() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     // --------------------------- Criando Autor ---------------------------
 
@@ -312,16 +379,7 @@ async fn test_flux_without_image() {
 
 #[tokio::test]
 async fn test_complete_author_flux_with_images() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     // --------------------------- Criando Autor ---------------------------
 
@@ -506,16 +564,7 @@ async fn test_complete_author_flux_with_images() {
 
 #[tokio::test]
 async fn test_create_author_without_image_edit_add_image() {
-    dotenv().ok();
-
-    let database_url = std::env::var("TESTE_DATABASE_URL").unwrap();
-    let pool = create_pool(&database_url).await;
-
-    let state = AppState {
-        db_pool: Arc::new(pool),
-    };
-
-    let app = create_app(state);
+    let app = create_app_to_test().await;
 
     // --------------------------- Criando Autor ---------------------------
 

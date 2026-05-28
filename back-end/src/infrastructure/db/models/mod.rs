@@ -5,7 +5,6 @@ pub mod publisher_row;
 pub mod user_row;
 
 pub mod book_author_row;
-pub mod book_publisher_row;
 pub mod book_gender_row;
 
 pub mod image_row;

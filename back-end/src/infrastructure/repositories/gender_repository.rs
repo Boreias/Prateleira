@@ -4,8 +4,8 @@ use sqlx::{PgPool, Row};
 
 use crate::domain::irepositories::igender_repository::IGenderRepository;
 use crate::infrastructure::db::models::gender_row::GenderRow;
+use crate::infrastructure::db::models::book_row::BookRow;
 use crate::infrastructure::db::models::book_author_row::BookAuthorRow;
-use crate::infrastructure::db::models::book_publisher_row::BookPublisherRow;
 use crate::infrastructure::db::models::book_gender_row::BookGenderRow;
 use crate::infrastructure::enums::reading_status::ReadingStatus;
 use crate::domain::entities::gender::Gender;
@@ -226,25 +226,29 @@ impl IGenderRepository for GenderRepository {
     }
 
     async fn get_genders_by_publisher(&self, publisher_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Gender>, String> {
-        let book_publisher_rows: Vec<BookPublisherRow> = sqlx::query_as(r#"
-            SELECT
-                book_id
-            FROM
-                book_publisher
-            WHERE
-                publisher_id = $1
+        let book_rows: Vec<BookRow> = sqlx::query_as(r#"
+                SELECT
+                        id, title, subtitle, publisher_id, series_collection, volume, edition, publication_year, pages, language, isbn, synopsis
+                    FROM
+                        book
+                    WHERE
+                        publisher_id = $1 AND deleted = false;
+                    LIMIT $2
+                    OFFSET $3;
             "#
         )
-            .bind(publisher_id)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(|e| e.to_string())?;
+        .bind(publisher_id)
+        .bind(page_size)
+        .bind(skip)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
 
         let mut genders: Vec<Gender> = Vec::new();
 
-        for book_publisher_row in book_publisher_rows {
+        for book_row in book_rows {
 
-            let book_id = book_publisher_row.book_id;
+            let book_id = book_row.id;
 
             let gender_rows: Vec<BookGenderRow> = sqlx::query_as(r#"
                 SELECT
@@ -299,7 +303,7 @@ impl IGenderRepository for GenderRepository {
                 book_id,
                 COUNT(user_id) as readed_book
             FROM book_user
-            WHERE reading_status = $1
+            WHERE reading_status = $1 AND deleted = false
             GROUP BY book_id
             ORDER BY readed_book DESC
             LIMIT $2

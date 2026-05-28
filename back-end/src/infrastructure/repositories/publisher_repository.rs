@@ -10,9 +10,9 @@ use sqlx::{PgPool, Row};
 use crate::domain::entities::publisher::Publisher;
 use crate::domain::irepositories::ipublisher_repository::IPublisherRepository;
 use crate::infrastructure::db::models::publisher_row::PublisherRow;
+use crate::infrastructure::db::models::book_row::BookRow;
 use crate::infrastructure::db::models::book_author_row::BookAuthorRow;
 use crate::infrastructure::db::models::book_gender_row::BookGenderRow;
-use crate::infrastructure::db::models::book_publisher_row::BookPublisherRow;
 use crate::infrastructure::db::models::image_row::ImageRow;
 use crate::infrastructure::enums::reading_status::ReadingStatus;
 use crate::infrastructure::common::consts::UPLOADS_IMAGE_PATH;
@@ -50,20 +50,25 @@ impl IPublisherRepository for PublisherRepository {
         )
             .bind(publisher_id)
             .bind(name)
-            .bind(site.unwrap())
-            .bind(email.unwrap())
+            .bind(site)
+            .bind(email)
             .execute(&self.pool)
             .await
             .map_err(|e| e.to_string())?;
 
         if file_name.is_some() && file_content.is_some() {
-            let image_id = Some(Uuid::new_v4());
+            let image_id = Uuid::new_v4();
             let new_filename = format!("{}.png", Uuid::new_v4());
 
             let path = format!("./{}/publisher/{}", UPLOADS_IMAGE_PATH, new_filename);
 
-            let mut file = tokio::fs::File::create(&path).await.unwrap();
-            file.write_all(&file_content.unwrap()).await.unwrap();
+            let mut file = tokio::fs::File::create(&path)
+                .await
+                .map_err(|e| e.to_string())?;
+
+            file.write_all(&file_content.unwrap())
+                .await
+                .map_err(|e| e.to_string())?;
 
             sqlx::query(r#"
                 INSERT INTO
@@ -72,7 +77,7 @@ impl IPublisherRepository for PublisherRepository {
                     ($1, $2, $3, $4);
                 "#
             )
-                .bind(image_id.unwrap())
+                .bind(image_id)
                 .bind(file_name)
                 .bind(path)
                 .bind(publisher_id)
@@ -178,7 +183,15 @@ impl IPublisherRepository for PublisherRepository {
     }
 
     async fn get_publisher_by_book (&self, book_id: Uuid, skip: i32, page_size: i32) -> Result<Publisher, String> {
-        let book_publisher_row: BookPublisherRow = sqlx::query_as("SELECT publisher_id FROM book_publisher WHERE book_id = $1")
+        let book_row: BookRow = sqlx::query_as(r#"
+                SELECT
+                    id, title, subtitle, publisher_id, series_collection, volume, edition, publication_year, pages, language, isbn, synopsis
+                FROM
+                    book
+                WHERE
+                    id = $1 AND deleted = false;
+            "#
+        )
             .bind(book_id)
             .fetch_one(&self.pool)
             .await
@@ -195,7 +208,7 @@ impl IPublisherRepository for PublisherRepository {
             OFFSET $3;
             "#
         )
-            .bind(book_publisher_row.publisher_id)
+            .bind(book_row.publisher_id)
             .bind(page_size)
             .bind(skip)
             .fetch_one(&self.pool)
@@ -229,7 +242,7 @@ impl IPublisherRepository for PublisherRepository {
     }
 
     async fn get_publishers_by_author (&self, author_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Publisher>, String> {
-        let book_rows: Vec<BookAuthorRow> = sqlx::query_as(r#"
+        let book_author_rows: Vec<BookAuthorRow> = sqlx::query_as(r#"
             SELECT
                 id, book_id, author_id
             FROM
@@ -248,17 +261,17 @@ impl IPublisherRepository for PublisherRepository {
 
         let mut publishers: Vec<Publisher> = Vec::new();
 
-        for book_row in book_rows {
+        for author_book_row in book_author_rows {
 
-            let book_id = book_row.book_id;
+            let book_id = author_book_row.book_id;
 
-            let book_publisher_row: BookPublisherRow = sqlx::query_as(r#"
-                SELECT
-                    id as book_id, publisher_id
-                FROM
-                    book
-                WHERE
-                    book_id = $1
+            let book_row: BookRow = sqlx::query_as(r#"
+                    SELECT
+                        id, title, subtitle, publisher_id, series_collection, volume, edition, publication_year, pages, language, isbn, synopsis
+                    FROM
+                        book
+                    WHERE
+                        id = $1 AND deleted = false;
                 "#
             )
                 .bind(book_id)
@@ -272,10 +285,10 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher
                 WHERE
-                    book_id = $1
+                    id = $1
                 "#
             )
-                .bind(book_publisher_row.publisher_id)
+                .bind(book_row.publisher_id)
                 .fetch_one(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -312,7 +325,7 @@ impl IPublisherRepository for PublisherRepository {
     async fn get_publishers_by_gender (&self, gender_id: Uuid, skip: i32, page_size: i32) -> Result<Vec<Publisher>, String> {
         let book_gender_rows: Vec<BookGenderRow> = sqlx::query_as(r#"
             SELECT
-                book_id
+                id, book_id, gender_id
             FROM
                 book_gender
             WHERE
@@ -331,13 +344,13 @@ impl IPublisherRepository for PublisherRepository {
         let mut publishers = Vec::new();
 
         for book_gender_row in book_gender_rows {
-            let publisher_row: BookPublisherRow = sqlx::query_as(r#"
-                SELECT
-                    id as book_id, publisher_id
-                FROM
-                    book
-                WHERE
-                    book_id = $1;
+            let book_row: BookRow = sqlx::query_as(r#"
+                    SELECT
+                        id, title, subtitle, publisher_id, series_collection, volume, edition, publication_year, pages, language, isbn, synopsis
+                    FROM
+                        book
+                    WHERE
+                        id = $1 AND deleted = false;
                 "#
             )
                 .bind(book_gender_row.book_id)
@@ -354,7 +367,7 @@ impl IPublisherRepository for PublisherRepository {
                     id = $1 AND deleted = false;
                 "#
             )
-                .bind(publisher_row.publisher_id)
+                .bind(book_row.publisher_id)
                 .fetch_one(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -370,7 +383,7 @@ impl IPublisherRepository for PublisherRepository {
                     publisher_id = $1 AND deleted = false;
                 "#
             )
-                .bind(publisher_row.publisher_id)
+                .bind(book_row.publisher_id)
                 .fetch_optional(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -398,7 +411,7 @@ impl IPublisherRepository for PublisherRepository {
                 book_id,
                 COUNT(user_id) as readed_book
             FROM book_user
-            WHERE reading_status = $1
+            WHERE reading_status = $1 AND deleted = false
             GROUP BY book_id
             ORDER BY readed_book DESC
             LIMIT $2
@@ -595,13 +608,18 @@ impl IPublisherRepository for PublisherRepository {
                     .map_err(|e| e.to_string())?;
             }
 
-            let image_id = Some(Uuid::new_v4());
+            let image_id = Uuid::new_v4();
             let new_filename = format!("{}.png", Uuid::new_v4());
 
             let path = format!("./{}/publisher/{}", UPLOADS_IMAGE_PATH, new_filename);
 
-            let mut file = tokio::fs::File::create(&path).await.unwrap();
-            file.write_all(&file_content.unwrap()).await.unwrap();
+            let mut file = tokio::fs::File::create(&path)
+                .await
+                .map_err(|e| e.to_string())?;
+
+            file.write_all(&file_content.unwrap())
+                .await
+                .map_err(|e| e.to_string())?;
 
             sqlx::query(r#"
                 INSERT INTO
@@ -610,7 +628,7 @@ impl IPublisherRepository for PublisherRepository {
                     ($1, $2, $3, $4);
                 "#
             )
-                .bind(image_id.unwrap())
+                .bind(image_id)
                 .bind(file_name)
                 .bind(path)
                 .bind(id)

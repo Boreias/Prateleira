@@ -36,16 +36,42 @@ CREATE TABLE gender (
     deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE gender_created_at (
+CREATE TABLE book (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    gender_id SERIAL NOT NULL REFERENCES gender(id),
-    user_id SERIAL NOT NULL REFERENCES user(id)
+    title VARCHAR(255) NOT NULL,
+    subtitle VARCHAR(255),
+    publisher_id UUID NOT NULL REFERENCES Publisher(id) ON DELETE CASCADE,
+    series_collection INT,
+    volume INT,
+    edition INT,
+    publication_year INT,
+    pages INT,
+    language VARCHAR(100),
+    isbn VARCHAR(25) NOT NULL,
+    synopsis TEXT,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE book_publisher (
+CREATE TABLE book_image (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    book_id SERIAL NOT NULL REFERENCES book(id),
-    publisher_id SERIAL NOT NULL REFERENCES publisher(id)
+    original_name VARCHAR(255) NOT NULL,
+    image_path TEXT NOT NULL,
+    book_id UUID NOT NULL REFERENCES book(id) ON DELETE CASCADE,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE book_author(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    book_id UUID NOT NULL REFERENCES Book(id) ON DELETE CASCADE,
+    author_id UUID NOT NULL REFERENCES Author(id) ON DELETE CASCADE,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE book_gender(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    book_id UUID NOT NULL REFERENCES Book(id) ON DELETE CASCADE,
+    gender_id UUID NOT NULL REFERENCES Gender(id) ON DELETE CASCADE,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- CREATE TABLE User (
@@ -91,39 +117,10 @@ CREATE TABLE substring_index (
     token BYTEA    -- SHA256(K || token)
 );
 
-
-CREATE TABLE book (
+CREATE TABLE gender_created_at (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255) NOT NULL,
-    subtitle VARCHAR(255),
-    publisher SERIAL NOT NULL REFERENCES Publisher(id),
-    series_collection INT,
-    volume INT,
-    edition INT,
-    publication_year INT,
-    pages INT,
-    language VARCHAR(100),
-    isbn VARCHAR(15),
-    synopsis TEXT,
-    book_image_id UUID REFERENCES book_image(id)
-);
-
-CREATE TABLE book_image (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    original_name VARCHAR(255) NOT NULL,
-    image_path TEXT NOT NULL
-);
-
-CREATE TABLE book_author(
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    book_id UUID NOT NULL REFERENCES Book(id),
-    author_id UUID NOT NULL REFERENCES Author(id)
-);
-
-CREATE TABLE book_gender(
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    book_id SERIAL NOT NULL REFERENCES Book(id),
-    gender_id SERIAL NOT NULL REFERENCES Gender(id)
+    gender_id UUID NOT NULL REFERENCES gender(id),
+    user_id UUID NOT NULL REFERENCES user(id)
 );
 
 CREATE TABLE reading_status(
