@@ -40,7 +40,7 @@ async fn create_author(
     let service = AuthorService::new((*state.db_pool).clone());
 
     let mut name: Option<String> = None;
-    let mut user_id: Option<Uuid> = None;
+    let mut user_id: Option<Uuid> = None; // TODO: Obter user_id a partir do token enviado
     let mut file_name: Option<String> = None;
     let mut file_content: Option<Bytes> = None;
     let mut books: Option<Vec<Uuid>> = None;

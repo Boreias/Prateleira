@@ -6,6 +6,22 @@ use aes_gcm::{
 };
 use rand::{Rng, rngs::StdRng};
 use hex::{decode, encode};
+use jsonwebtoken::{
+    Algorithm,
+    DecodingKey,
+    EncodingKey,
+    Header,
+    TokenData,
+    Validation,
+    decode as json_decode,
+    encode as json_encode,
+    errors::Error
+};
+use uuid::Uuid;
+use chrono::{Utc, Duration};
+use std::env;
+
+use crate::infrastructure::crypto::claims::Claims;
 
 
 const KEY_LENGTH: usize = 128; // 256 bits
@@ -16,6 +32,34 @@ pub fn generate_salt() -> Vec<u8> {
     let mut rng: StdRng = rand::make_rng();
     rng.fill_bytes(&mut salt);
     salt
+}
+
+pub fn generate_jwt(user_id: Uuid) -> Result<String, Error> {
+
+    let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY não definido");
+
+    let expiration =
+        Utc::now()
+            .checked_add_signed(Duration::hours(2))
+            .unwrap()
+            .timestamp();
+
+    let claims = Claims {
+        sub: user_id,
+        exp: expiration as usize,
+    };
+
+    json_encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret_key.as_bytes()),
+    )
+}
+
+pub fn validate_jwt(token: String) -> Result<TokenData<Claims>, Error> {
+    let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY não definido");
+
+    json_decode::<Claims>(&token, &DecodingKey::from_secret(secret_key.as_bytes()), &Validation::new(Algorithm::HS256))
 }
 
 pub fn simple_hash(key: &[u8], data: String) -> String {
@@ -33,7 +77,6 @@ pub fn derive_password_hash(password: String, salt: Vec<u8>) -> Vec<u8> {
 
     pbkdf2_hmac::<Sha256>(password.as_bytes(), &salt, n, &mut password_hash);
 
-    // encode(password_hash)
     password_hash
 }
 

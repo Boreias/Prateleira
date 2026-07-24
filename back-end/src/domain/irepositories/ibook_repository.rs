@@ -53,13 +53,13 @@ pub trait IBookRepository {
         &self,
         skip: i32,
         page_size: i32
-    ) -> Result<Vec<Book>, String>; // TODO: livros mais lidos
+    ) -> Result<Vec<Book>, String>;
 
     async fn best_valuated_books(
         &self,
         skip: i32,
         page_size: i32
-    ) -> Result<Vec<Book>, String>;// TODO: livros melhor avaliados
+    ) -> Result<Vec<Book>, String>;
 
     async fn alter_book(
         &self,

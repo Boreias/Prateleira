@@ -34,7 +34,7 @@ pub fn gender_routes() -> Router<AppState> {
 #[derive(Deserialize)]
 struct CreateGenderResquest {
     name: String,
-    user_id: Uuid,
+    user_id: Uuid, // TODO: Obter user_id a partir do token enviado
     books_ids: Option<Vec<Uuid>>
 }
 

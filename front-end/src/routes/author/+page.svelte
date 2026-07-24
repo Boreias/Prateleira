@@ -1,1 +1,0 @@
-<h1>Página do autor</h1>
