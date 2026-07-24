@@ -17,6 +17,7 @@ async fn main() {
 
     dotenv().ok();
     let database_url = env::var("DATABASE_URL")
+    // let database_url = env::var("TESTE_DATABASE_URL")
         .expect("Variável de ambiente DATABASE_URL não definida");
 
     let pool = create_pool(&database_url).await;

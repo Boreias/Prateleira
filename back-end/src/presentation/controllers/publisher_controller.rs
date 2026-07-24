@@ -39,7 +39,7 @@ async fn create_publisher(
     let service = PublisherService::new((*state.db_pool).clone());
 
     let mut name: Option<String> = None;
-    let mut user_id: Option<Uuid> = None;
+    let mut user_id: Option<Uuid> = None; // TODO: Obter user_id a partir do token enviado
     let mut site: Option<String> = None;
     let mut email: Option<String> = None;
     let mut file_name: Option<String> = None;

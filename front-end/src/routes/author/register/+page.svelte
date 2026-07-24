@@ -1,1 +1,0 @@
-<p>Registro de autor</p>

@@ -60,7 +60,7 @@ async fn create_book(
     let mut synopsis: Option<String> = None;
     let mut file_name: Option<String> = None;
     let mut file_content: Option<Bytes> = None;
-    let mut user_id: Option<Uuid> = None;
+    let mut user_id: Option<Uuid> = None; // TODO: Obter user_id a partir do token enviado
 
     while let Some(field) = multipart.next_field().await.unwrap() {
         let field_name = field.name().unwrap().to_string();

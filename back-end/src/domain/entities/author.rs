@@ -7,9 +7,9 @@ use crate::domain::entities::book::Book;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Author {
     id: Uuid,
-    pub name: String,
-    pub avatar: Option<String>,
-    pub books: Option<Vec<Book>>
+    name: String,
+    avatar: Option<String>,
+    books: Option<Vec<Book>>
 }
 
 

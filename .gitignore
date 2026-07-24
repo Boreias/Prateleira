@@ -7,6 +7,7 @@
 /back-end/src/infrastructure/uploads/images/author/*
 /back-end/src/infrastructure/uploads/images/book/*
 /back-end/src/infrastructure/uploads/images/publisher/*
+*.mmdb
 
 # ----------------- Front-end -----------------
 node_modules
@@ -34,6 +35,4 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 
-# ----------------- Antigo front em React (remover depois) ----------------- 
-_front-end_react
-_front-end_vue
+AdobeColor-My Color Theme.jpeg
