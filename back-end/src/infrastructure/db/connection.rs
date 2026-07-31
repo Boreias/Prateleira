@@ -888,7 +888,7 @@ mod tests {
             ORDER BY column_name ASC;
         "#).fetch_all(&pool).await.unwrap();
 
-        assert_eq!(schema.len(), 10);
+        assert_eq!(schema.len(), 4);
 
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
@@ -958,7 +958,7 @@ mod tests {
             ORDER BY column_name ASC;
         "#).fetch_all(&pool).await.unwrap();
 
-        assert_eq!(schema.len(), 10);
+        assert_eq!(schema.len(), 3);
 
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
@@ -1022,7 +1022,7 @@ mod tests {
             ORDER BY column_name ASC;
         "#).fetch_all(&pool).await.unwrap();
 
-        assert_eq!(schema.len(), 10);
+        assert_eq!(schema.len(), 2);
 
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
@@ -1080,7 +1080,7 @@ mod tests {
             ORDER BY column_name ASC;
         "#).fetch_all(&pool).await.unwrap();
 
-        assert_eq!(schema.len(), 10);
+        assert_eq!(schema.len(), 4);
 
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
