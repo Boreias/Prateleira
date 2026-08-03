@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
-use chrono::NaiveDate;
+use chrono::NaiveDateTime;
 
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -11,10 +11,10 @@ pub struct UserAuth {
     password: String,
     salt: String,
     country: String,
-    is_active: bool,
     is_email_verified: bool,
-    created_at: NaiveDate,
-    updated_at: NaiveDate
+    created_at: NaiveDateTime,
+    updated_at: NaiveDateTime,
+    deleted_at: Option<NaiveDateTime>
 }
 
 impl UserAuth {
@@ -25,10 +25,10 @@ impl UserAuth {
         password: String,
         salt: String,
         country: String,
-        is_active: bool,
         is_email_verified: bool,
-        created_at: NaiveDate,
-        updated_at: NaiveDate
+        created_at: NaiveDateTime,
+        updated_at: NaiveDateTime,
+        deleted_at: Option<NaiveDateTime>
     ) -> UserAuth {
         UserAuth {
             id,
@@ -37,10 +37,10 @@ impl UserAuth {
             password,
             salt,
             country,
-            is_active,
             is_email_verified,
             created_at,
-            updated_at
+            updated_at,
+            deleted_at
         }
     }
 
@@ -69,19 +69,23 @@ impl UserAuth {
     }
 
     pub fn get_is_active(&self) -> bool {
-        self.is_active
+        self.deleted_at.is_none()
     }
 
     pub fn get_is_email_verified(&self) -> bool {
         self.is_email_verified
     }
 
-    pub fn get_created_at(&self) -> NaiveDate {
+    pub fn get_created_at(&self) -> NaiveDateTime {
         self.created_at
     }
 
-    pub fn get_updated_at(&self) -> NaiveDate {
+    pub fn get_updated_at(&self) -> NaiveDateTime {
         self.updated_at
+    }
+
+    pub fn get_deleted_at(&self) -> Option<NaiveDateTime> {
+        self.deleted_at
     }
 
     pub fn set_email(&mut self, new_email: String) {
@@ -96,15 +100,15 @@ impl UserAuth {
         self.country = new_country;
     }
 
-    pub fn set_is_active(&mut self, new_is_active: bool) {
-        self.is_active = new_is_active;
-    }
-
     pub fn set_is_email_verified(&mut self, new_is_email_verified: bool) {
         self.is_email_verified = new_is_email_verified;
     }
 
-    pub fn set_updated_at(&mut self, new_updated_at: NaiveDate) {
+    pub fn set_updated_at(&mut self, new_updated_at: NaiveDateTime) {
         self.updated_at = new_updated_at;
+    }
+
+    pub fn set_deleted_at(&mut self, new_deleted_at: Option<NaiveDateTime>) {
+        self.deleted_at = new_deleted_at;
     }
 }

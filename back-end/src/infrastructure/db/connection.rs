@@ -799,20 +799,20 @@ mod tests {
         let column_name: String = schema[2].get("column_name");
         let data_type: String = schema[2].get("data_type");
 
-        assert_eq!(column_name, "email".to_string());
-        assert_eq!(data_type, "character varying".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[3].get("column_name");
         let data_type: String = schema[3].get("data_type");
 
-        assert_eq!(column_name, "id".to_string());
-        assert_eq!(data_type, "uuid".to_string());
+        assert_eq!(column_name, "email".to_string());
+        assert_eq!(data_type, "character varying".to_string());
 
         let column_name: String = schema[4].get("column_name");
         let data_type: String = schema[4].get("data_type");
 
-        assert_eq!(column_name, "is_active".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "id".to_string());
+        assert_eq!(data_type, "uuid".to_string());
 
         let column_name: String = schema[5].get("column_name");
         let data_type: String = schema[5].get("data_type");
