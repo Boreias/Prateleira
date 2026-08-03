@@ -1,6 +1,6 @@
 use sqlx::FromRow;
 use uuid::Uuid;
-use chrono::NaiveDate;
+use chrono::NaiveDateTime;
 
 #[derive(Debug, FromRow)]
 pub struct UserAuthRow {
@@ -10,8 +10,8 @@ pub struct UserAuthRow {
     pub password: String,
     pub salt: String,
     pub country: String,
-    pub is_active: bool,
     pub is_email_verified: bool,
-    pub created_at: NaiveDate,
-    pub updated_at: NaiveDate
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+    pub deleted_at: Option<NaiveDateTime>
 }

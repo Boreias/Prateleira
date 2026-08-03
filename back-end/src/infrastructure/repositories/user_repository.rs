@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use chrono::{NaiveDate, Utc};
+use chrono::{NaiveDate, NaiveDateTime, Utc};
 use sqlx::{PgPool, Row};
 use async_trait::async_trait;
 use axum::{
@@ -63,7 +63,7 @@ impl IUserRepository for UserRepository {
     ) -> Result<(), String> {
         let check_credentials: Option<UserAuthRow> = sqlx::query_as(r#"
             SELECT
-                id, username, email, password, salt, country, is_active, is_email_verified, created_at, updated_at
+                id, username, email, password, salt, country, is_email_verified, created_at, updated_at, deleted_at
             FROM
                 user_auth
             WHERE
@@ -86,7 +86,7 @@ impl IUserRepository for UserRepository {
         }
 
         let user_id: Uuid = Uuid::new_v4();
-        let actual_date: NaiveDate = Utc::now().date_naive();
+        let actual_date: NaiveDateTime = Utc::now().naive_utc();
 
         let salt = SaltString::generate(&mut OsRng);
         let passwork_hash = Argon2::default()
@@ -96,9 +96,9 @@ impl IUserRepository for UserRepository {
 
         sqlx::query(r#"
             INSERT INTO
-                user_auth (id, username, email, password, salt, country, is_active, is_email_verified, created_at, updated_at)
+                user_auth (id, username, email, password, salt, country, is_email_verified, created_at, updated_at)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9);
         "#)
             .bind(user_id)
             .bind(username)
@@ -106,7 +106,6 @@ impl IUserRepository for UserRepository {
             .bind(passwork_hash)
             .bind(salt.to_string())
             .bind(country)
-            .bind(true)
             .bind(false)
             .bind(actual_date)
             .bind(actual_date)
@@ -240,7 +239,7 @@ impl IUserRepository for UserRepository {
             INNER JOIN
                 user_auth AS au
             WHERE
-                up.id = $1 AND au.is_active = TRUE;
+                up.id = $1 AND au.deleted_at IS NULL;
         "#)
         .bind(id)
         .fetch_one(&self.pool)
@@ -261,7 +260,7 @@ impl IUserRepository for UserRepository {
             INNER JOIN
                 user_auth AS au
             WHERE
-                au.email = $1 AND au.is_active = TRUE;
+                au.email = $1 AND au.deleted_at IS NULL;
         "#)
         .bind(email)
         .fetch_optional(&self.pool)
@@ -287,7 +286,7 @@ impl IUserRepository for UserRepository {
             INNER JOIN
                 user_auth AS au
             WHERE
-                up.name LIKE $1 AND au.is_active = TRUE
+                up.name LIKE $1 AND au.deleted_at IS NULL
             LIMIT $2
             OFFSET $3;
         "#)
@@ -312,7 +311,7 @@ impl IUserRepository for UserRepository {
     async fn auth_user(&self, username_or_email: String, password: String, country: String, cookies: Cookies) -> Result<(), String> {
         let user_auth_row: Option<UserAuthRow> = sqlx::query_as(r#"
             SELECT
-                id, username, email, password_hash, salt, country, is_active, is_email_verified, created_at, updated_at
+                id, username, email, password_hash, salt, country, is_email_verified, created_at, updated_at, deleted_at
             FROM
                 user_auth
             WHERE
@@ -339,7 +338,7 @@ impl IUserRepository for UserRepository {
                     INNER JOIN
                         user_auth AS au
                     WHERE
-                        up.id = $1 AND au.is_active = TRUE;
+                        up.id = $1 AND au.deleted_at IS NULL;
                 "#)
                 .bind(user_auth.get_id())
                 .fetch_one(&self.pool)
@@ -455,7 +454,7 @@ impl IUserRepository for UserRepository {
             ON
                 au.id = up.id
             WHERE
-                up.id = $1 AND au.is_active = true AND au.is_email_verified = true;
+                up.id = $1 AND au.deleted_at IS NULL AND au.is_email_verified = true;
         "#)
             .bind(id)
             .fetch_optional(&self.pool)
@@ -583,11 +582,11 @@ impl IUserRepository for UserRepository {
     ) -> Result<(), String> {
         let check_user_row: Option<UserAuthRow> = sqlx::query_as(r#"
             SELECT
-                id, username, email, password_hash, salt, is_active, is_email_verified, created_at, updated_at
+                id, username, email, password_hash, salt, is_email_verified, created_at, updated_at, deleted_at
             FROM
                 user_auth
             WHERE
-                id = $1 AND is_active = true AND is_email_verified = true;
+                id = $1 AND deleted_at IS NULL AND is_email_verified = true;
         "#)
             .bind(id)
             .fetch_optional(&self.pool)
@@ -603,7 +602,7 @@ impl IUserRepository for UserRepository {
         let new_password_vec = derive_password_hash(password, check_user.get_salt().into_bytes());
         let new_password = String::from_utf8(new_password_vec).expect("Erro ao criptografar senha");
 
-        let updated_at: NaiveDate = Utc::now().date_naive();
+        let updated_at: NaiveDateTime = Utc::now().naive_utc();
 
         sqlx::query(r#"
             UPDATE
@@ -628,7 +627,7 @@ impl IUserRepository for UserRepository {
             UPDATE
                 user_auth
             SET
-                is_active = true
+                deleted_at = NULL
             WHERE id = $1;
         "#)
             .bind(id)
@@ -640,13 +639,15 @@ impl IUserRepository for UserRepository {
     }
 
     async fn desactivate_user(&self, id: Uuid) -> Result<(), String> {
+        let actual_date: NaiveDateTime = Utc::now().naive_utc();
         sqlx::query(r#"
             UPDATE
                 user_auth
             SET
-                is_active = false
-            WHERE id = $1;
+                deleted_at = $1
+            WHERE id = $2;
         "#)
+            .bind(actual_date)
             .bind(id)
             .execute(&self.pool)
             .await
@@ -658,7 +659,7 @@ impl IUserRepository for UserRepository {
     async fn delete_user(&self, id: Uuid) -> Result<(), String> {
         let user_auth_row: UserAuthRow = sqlx::query_as(r#"
             SELECT
-                id, username, email, password_hash, password_algorithm, is_active, is_email_verified, created_at, updated_at
+                id, username, email, password_hash, password_algorithm, is_email_verified, created_at, updated_at, deleted_at
             FROM
                 user_auth
             WHERE

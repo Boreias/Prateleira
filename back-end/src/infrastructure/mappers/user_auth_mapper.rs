@@ -10,10 +10,10 @@ impl From<UserAuthRow> for UserAuth {
             row.password,
             row.salt,
             row.country,
-            row.is_active,
             row.is_email_verified,
             row.created_at,
-            row.updated_at
+            row.updated_at,
+            row.deleted_at
         )
     }
 }
