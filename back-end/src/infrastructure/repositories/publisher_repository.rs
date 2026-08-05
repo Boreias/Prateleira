@@ -6,6 +6,7 @@ use tokio::{
 };
 use uuid::Uuid;
 use sqlx::{PgPool, Row};
+use chrono::{NaiveDateTime, Utc};
 
 use crate::domain::entities::publisher::Publisher;
 use crate::domain::irepositories::ipublisher_repository::IPublisherRepository;
@@ -96,7 +97,7 @@ impl IPublisherRepository for PublisherRepository {
             FROM
                 publisher
             WHERE
-                id = $1 AND deleted = false;
+                id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(id)
@@ -112,7 +113,7 @@ impl IPublisherRepository for PublisherRepository {
             FROM
                 publisher_image
             WHERE
-                publisher_id = $1 AND deleted = false;
+                publisher_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(publisher_row.id)
@@ -138,7 +139,7 @@ impl IPublisherRepository for PublisherRepository {
             FROM
                 publisher
             WHERE
-                name LIKE $1 AND deleted = false
+                name LIKE $1 AND deleted_at IS NULL
             LIMIT $2
             OFFSET $3;
             "#
@@ -161,7 +162,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -189,7 +190,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     book
                 WHERE
-                    id = $1 AND deleted = false;
+                    id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_id)
@@ -203,7 +204,7 @@ impl IPublisherRepository for PublisherRepository {
             FROM
                 publisher
             WHERE
-                id = $1 AND deleted = false
+                id = $1 AND deleted_at IS NULL
             LIMIT $2
             OFFSET $3;
             "#
@@ -223,7 +224,7 @@ impl IPublisherRepository for PublisherRepository {
             FROM
                 publisher_image
             WHERE
-                publisher_id = $1 AND deleted = false;
+                publisher_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(publisher_row.id)
@@ -271,7 +272,7 @@ impl IPublisherRepository for PublisherRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -285,7 +286,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher
                 WHERE
-                    id = $1
+                    id = $1;
                 "#
             )
                 .bind(book_row.publisher_id)
@@ -301,7 +302,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -350,7 +351,7 @@ impl IPublisherRepository for PublisherRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_gender_row.book_id)
@@ -364,7 +365,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher
                 WHERE
-                    id = $1 AND deleted = false;
+                    id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.publisher_id)
@@ -380,7 +381,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.publisher_id)
@@ -411,7 +412,7 @@ impl IPublisherRepository for PublisherRepository {
                 book_id,
                 COUNT(user_id) as readed_book
             FROM book_user
-            WHERE reading_status = $1 AND deleted = false
+            WHERE reading_status = $1 AND deleted_at IS NULL
             GROUP BY book_id
             ORDER BY readed_book DESC
             LIMIT $2
@@ -455,7 +456,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher
                 WHERE
-                    id = $1 AND deleted = false
+                    id = $1 AND deleted_at IS NULL
                 LIMIT $2
                 OFFSET $3;
             "#
@@ -475,7 +476,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -510,7 +511,7 @@ impl IPublisherRepository for PublisherRepository {
                 AVG(br.review)::float8 AS publisher_average,
                 COUNT(br.review) AS total_reviews
             FROM publisher p
-            WHERE p.deleted = false
+            WHERE p.deleted_at IS NULL
             JOIN book b ON b.publisher_id = p.id
             JOIN book_review br ON br.book_id = b.id
             GROUP BY p.id, p.name
@@ -538,7 +539,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher_image
                 WHERE
-                    id = $1 AND deleted = false;
+                    id = $1 AND deleted_at IS NULL;
                 "#)
                 .bind(publisher_id)
                 .fetch_optional(&self.pool)
@@ -584,7 +585,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(id)
@@ -599,7 +600,7 @@ impl IPublisherRepository for PublisherRepository {
                     DELETE FROM
                         publisher_image
                     WHERE
-                        id = $1
+                        id = $1;
                     "#
                 )
                     .bind(image_row.unwrap().id)
@@ -642,7 +643,7 @@ impl IPublisherRepository for PublisherRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(id)
@@ -658,7 +659,7 @@ impl IPublisherRepository for PublisherRepository {
                     DELETE FROM
                         publisher_image
                     WHERE
-                        id = $1
+                        id = $1;
                     "#
                 )
                     .bind(image_row.unwrap().id)
@@ -674,7 +675,7 @@ impl IPublisherRepository for PublisherRepository {
             SET
                 name = $2, site = $3, email = $4
             WHERE
-                id = $1 AND deleted = false;
+                id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(id)
@@ -689,15 +690,18 @@ impl IPublisherRepository for PublisherRepository {
     }
 
     async fn delete_publisher (&self, id: Uuid, _user_id: Uuid) -> Result<(), String> {
+        let actual_date: NaiveDateTime = Utc::now().naive_utc();
+    
         sqlx::query(r#"
             UPDATE
                 publisher_image
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                publisher_id = $1
+                publisher_id = $2;
             "#
         )
+            .bind(actual_date)
             .bind(id)
             .execute(&self.pool)
             .await
@@ -707,11 +711,12 @@ impl IPublisherRepository for PublisherRepository {
             UPDATE
                 publisher
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                id = $1
+                id = $2;
             "#
         )
+            .bind(actual_date)
             .bind(id)
             .execute(&self.pool)
             .await
@@ -727,7 +732,7 @@ impl IPublisherRepository for PublisherRepository {
             FROM
                 publisher_image
             WHERE
-                deleted = true
+                deleted_at IS NOT NULL;
             "#
         )
             .fetch_all(&self.pool)
@@ -741,7 +746,7 @@ impl IPublisherRepository for PublisherRepository {
         sqlx::query(r#"
             DELETE FROM
                 publisher_image
-            WHERE deleted = true
+            WHERE deleted_at IS NOT NULL;
             "#
         )
             .execute(&self.pool)
@@ -751,7 +756,7 @@ impl IPublisherRepository for PublisherRepository {
         sqlx::query(r#"
             DELETE FROM
                 publisher
-            WHERE deleted = true
+            WHERE deleted_at IS NOT NULL;
             "#
         )
             .execute(&self.pool)

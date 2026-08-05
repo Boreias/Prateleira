@@ -6,6 +6,7 @@ use tokio::{
 };
 use uuid::Uuid;
 use sqlx::{PgPool, Row};
+use chrono::{NaiveDateTime, Utc};
 
 use crate::domain::irepositories::iauthor_repository::IAuthorRepository;
 use crate::domain::entities::author::Author;
@@ -94,7 +95,7 @@ impl IAuthorRepository for AuthorRepository {
             FROM
                 author
             WHERE
-                id = $1 AND deleted = false;
+                id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(id)
@@ -110,7 +111,7 @@ impl IAuthorRepository for AuthorRepository {
             FROM
                 author_image
             WHERE
-                author_id = $1 AND deleted = false;
+                author_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(author_row.id)
@@ -136,7 +137,7 @@ impl IAuthorRepository for AuthorRepository {
             FROM
                 author
             WHERE
-                name LIKE $1 AND deleted = false
+                name LIKE $1 AND deleted_at IS NULL
             LIMIT $2
             OFFSET $3;
             "#
@@ -159,7 +160,7 @@ impl IAuthorRepository for AuthorRepository {
                 FROM
                     author_image
                 WHERE
-                    author_id = $1 AND deleted = false;
+                    author_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(author_row.id)
@@ -196,7 +197,7 @@ impl IAuthorRepository for AuthorRepository {
                 FROM
                     author
                 WHERE
-                    id = $1 AND deleted = false
+                    id = $1 AND deleted_at IS NULL
                 LIMIT $2
                 OFFSET $3;
                 "#
@@ -217,7 +218,7 @@ impl IAuthorRepository for AuthorRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -282,7 +283,7 @@ impl IAuthorRepository for AuthorRepository {
                     FROM
                         author
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.author_id)
@@ -298,7 +299,7 @@ impl IAuthorRepository for AuthorRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -327,7 +328,7 @@ impl IAuthorRepository for AuthorRepository {
                     FROM
                         book
                     WHERE
-                        publisher_id = $1 AND deleted = false
+                        publisher_id = $1 AND deleted_at IS NULL
                     LIMIT $2
                     OFFSET $3;
             "#
@@ -360,7 +361,7 @@ impl IAuthorRepository for AuthorRepository {
                     FROM
                         author
                     WHERE
-                        id = $1 AND deleted = false
+                        id = $1 AND deleted_at IS NULL
                     LIMIT $2
                     OFFSET $3;
                     "#
@@ -380,7 +381,7 @@ impl IAuthorRepository for AuthorRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -412,7 +413,7 @@ impl IAuthorRepository for AuthorRepository {
                 book_id,
                 COUNT(user_id) as readed_book
             FROM book_user
-            WHERE reading_status = $1 AND deleted = false
+            WHERE reading_status = $1 AND deleted_at IS NULL
             GROUP BY book_id
             ORDER BY readed_book DESC
             LIMIT $2
@@ -460,7 +461,7 @@ impl IAuthorRepository for AuthorRepository {
                 FROM
                     author
                 WHERE
-                    id IN ($1) AND deleted = false
+                    id IN ($1) AND deleted_at IS NULL
                 LIMIT $2
                 OFFSET $3;
             "#
@@ -481,7 +482,7 @@ impl IAuthorRepository for AuthorRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -515,7 +516,7 @@ impl IAuthorRepository for AuthorRepository {
                 AVG(br.review)::float8 AS author_average,
                 COUNT(br.review) AS total_reviews
             FROM author a
-            WHERE a.deleted = false
+            WHERE a.deleted_at IS NULL
             JOIN book_author ba ON a.id = ba.author_id
             JOIN book b ON ba.book_id = b.id
             JOIN book_review br ON br.book_id = b.id
@@ -544,7 +545,7 @@ impl IAuthorRepository for AuthorRepository {
                 FROM
                     author_image
                 WHERE
-                    id = $1 AND deleted = false;
+                    id = $1 AND deleted_at IS NULL;
                 "#)
                 .bind(author_id)
                 .fetch_optional(&self.pool)
@@ -581,7 +582,7 @@ impl IAuthorRepository for AuthorRepository {
                 FROM
                     author_image
                 WHERE
-                    author_id = $1 AND deleted = false;
+                    author_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(id)
@@ -639,7 +640,7 @@ impl IAuthorRepository for AuthorRepository {
                 FROM
                     author_image
                 WHERE
-                    author_id = $1 AND deleted = false;
+                    author_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(id)
@@ -671,7 +672,7 @@ impl IAuthorRepository for AuthorRepository {
             SET
                 name = $2
             WHERE
-                id = $1 AND deleted = false;
+                id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(id)
@@ -684,15 +685,18 @@ impl IAuthorRepository for AuthorRepository {
     }
 
     async fn delete_author(&self, id: Uuid, _user_id: Uuid) -> Result<(), String> {
+        let actual_date: NaiveDateTime = Utc::now().naive_utc();
+
         sqlx::query(r#"
             UPDATE
                 author_image
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                author_id = $1
+                author_id = $2
             "#
         )
+            .bind(actual_date)
             .bind(id)
             .execute(&self.pool)
             .await
@@ -702,11 +706,12 @@ impl IAuthorRepository for AuthorRepository {
             UPDATE
                 author
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                id = $1
+                id = $2
             "#
         )
+            .bind(actual_date)
             .bind(id)
             .execute(&self.pool)
             .await
@@ -722,7 +727,7 @@ impl IAuthorRepository for AuthorRepository {
             FROM
                 author_image
             WHERE
-                deleted = true
+                deleted_at IS NOT NULL
             "#
         )
             .fetch_all(&self.pool)
@@ -736,7 +741,7 @@ impl IAuthorRepository for AuthorRepository {
         sqlx::query(r#"
             DELETE FROM
                 author_image
-            WHERE deleted = true
+            WHERE deleted_at IS NOT NULL
             "#
         )
             .execute(&self.pool)
@@ -746,7 +751,7 @@ impl IAuthorRepository for AuthorRepository {
         sqlx::query(r#"
             DELETE FROM
                 author
-            WHERE deleted = true
+            WHERE deleted_at IS NOT NULL
             "#
         )
             .execute(&self.pool)

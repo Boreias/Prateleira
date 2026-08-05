@@ -6,6 +6,7 @@ use tokio::{
 };
 use uuid::Uuid;
 use sqlx::{PgPool, Row};
+use chrono::{NaiveDateTime, Utc};
 
 use crate::domain::entities::book::Book;
 use crate::domain::entities::author::Author;
@@ -61,7 +62,7 @@ impl IBookRepository for BookRepository {
             INSERT INTO
                 book (id, title, subtitle, publisher_id, series_collection, volume, edition, publication_year, pages, language, isbn, synopsis)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);
             "#
         )
             .bind(book_id)
@@ -116,7 +117,7 @@ impl IBookRepository for BookRepository {
                     INSERT INTO
                         book_gender (id, book_id, gender_id)
                     VALUES
-                        ($1, $2, $3)
+                        ($1, $2, $3);
                 "#
             )
                 .bind(book_gender_id)
@@ -133,7 +134,7 @@ impl IBookRepository for BookRepository {
                     INSERT INTO
                         book_author (id, book_id, author_id)
                     VALUES
-                        ($1, $2, $3)
+                        ($1, $2, $3);
                 "#
             )
                 .bind(book_author_id)
@@ -154,7 +155,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book
                 WHERE
-                    id = $1 AND deleted = false;
+                    id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_id)
@@ -170,7 +171,7 @@ impl IBookRepository for BookRepository {
             FROM
                 book_image
             WHERE
-                book_id = $1 AND deleted = false;
+                book_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_row.id)
@@ -191,7 +192,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher
                 WHERE
-                    id = $1 AND deleted = false;
+                    id = $1 AND deleted_at IS NULL;
             "#
         )
         .bind(book_row.publisher_id)
@@ -207,7 +208,7 @@ impl IBookRepository for BookRepository {
             FROM
                 publisher_image
             WHERE
-                publisher_id = $1 AND deleted = false;
+                publisher_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(publisher_row.id)
@@ -231,7 +232,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_author
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_id)
@@ -246,7 +247,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_author_row.author_id)
@@ -262,7 +263,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     author_image
                 WHERE
-                    author_id = $1 AND deleted = false;
+                    author_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(author_row.id)
@@ -289,7 +290,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_gender
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
             "#
         )
         .bind(book_id)
@@ -304,7 +305,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         gender
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_gender_row.gender_id)
@@ -335,7 +336,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book
                 WHERE
-                    title LIKE $1 AND deleted = false
+                    title LIKE $1 AND deleted_at IS NULL
                 LIMIT $2
                 OFFSET $3;
             "#
@@ -358,7 +359,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -379,7 +380,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -395,7 +396,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -419,7 +420,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -434,7 +435,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -450,7 +451,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -477,7 +478,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.id)
@@ -492,7 +493,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -525,7 +526,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book
                 WHERE
-                    isbn = $1 AND deleted = false;
+                    isbn = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(isbn)
@@ -541,7 +542,7 @@ impl IBookRepository for BookRepository {
             FROM
                 book_image
             WHERE
-                book_id = $1 AND deleted = false;
+                book_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_row.id)
@@ -562,7 +563,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher
                 WHERE
-                    id = $1 AND deleted = false;
+                    id = $1 AND deleted_at IS NULL;
             "#
         )
         .bind(book_row.publisher_id)
@@ -578,7 +579,7 @@ impl IBookRepository for BookRepository {
             FROM
                 publisher_image
             WHERE
-                publisher_id = $1 AND deleted = false;
+                publisher_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(publisher_row.id)
@@ -602,7 +603,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_author
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_row.id)
@@ -617,7 +618,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_author_row.author_id)
@@ -633,7 +634,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     author_image
                 WHERE
-                    author_id = $1 AND deleted = false;
+                    author_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(author_row.id)
@@ -660,7 +661,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_gender
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
             "#
         )
         .bind(book_row.id)
@@ -675,7 +676,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         gender
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_gender_row.gender_id)
@@ -705,7 +706,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_author
                 WHERE
-                    author_id = $1 AND deleted = false
+                    author_id = $1 AND deleted_at IS NULL
                 LIMIT $2
                 OFFSET $3;
             "#
@@ -726,7 +727,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_author_row.book_id)
@@ -742,7 +743,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -763,7 +764,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -779,7 +780,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -803,7 +804,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_author_row.book_id)
@@ -818,7 +819,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_intern_row.author_id)
@@ -834,7 +835,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -861,7 +862,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_author_row.book_id)
@@ -876,7 +877,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -909,7 +910,7 @@ impl IBookRepository for BookRepository {
                 AVG(br.review)::float8 AS author_average,
                 COUNT(br.review) AS total_reviews
             FROM author a
-            WHERE a.id = $1 AND a.deleted = false
+            WHERE a.id = $1 AND a.deleted_at IS NULL
             JOIN book_author ba ON ba.author_id = a.id
             JOIN book b ON b.id = ba.book_id
             JOIN book_review br ON br.book_id = b.id
@@ -937,7 +938,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -953,7 +954,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -974,7 +975,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -990,7 +991,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -1014,7 +1015,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -1029,7 +1030,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -1045,7 +1046,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -1072,7 +1073,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_id)
@@ -1087,7 +1088,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -1120,7 +1121,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book
                     WHERE
-                        publisher_id = $1 AND deleted = false
+                        publisher_id = $1 AND deleted_at IS NULL
                     LIMIT $2
                     OFFSET $3;
             "#
@@ -1143,7 +1144,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -1164,7 +1165,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -1180,7 +1181,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -1204,7 +1205,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -1219,7 +1220,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -1235,7 +1236,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -1262,7 +1263,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.id)
@@ -1277,7 +1278,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -1310,7 +1311,7 @@ impl IBookRepository for BookRepository {
                 AVG(br.review)::float8 AS publisher_average,
                 COUNT(br.review) AS total_reviews
             FROM publisher p
-            WHERE p.id = $1 AND p.deleted = false
+            WHERE p.id = $1 AND p.deleted_at IS NULL
             JOIN book b ON b.publisher_id = p.id
             JOIN book_review br ON br.book_id = b.id
             GROUP BY b.id, b.name
@@ -1337,7 +1338,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -1353,7 +1354,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -1374,7 +1375,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -1390,7 +1391,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -1414,7 +1415,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -1429,7 +1430,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -1445,7 +1446,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -1472,7 +1473,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_id)
@@ -1487,7 +1488,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -1520,7 +1521,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_gender
                 WHERE
-                    gender_id = $1 AND deleted = false
+                    gender_id = $1 AND deleted_at IS NULL
                 LIMIT $2
                 OFFSET $3;
             "#
@@ -1541,7 +1542,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_gender_row.book_id)
@@ -1557,7 +1558,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -1578,7 +1579,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -1594,7 +1595,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -1618,7 +1619,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_gender_row.book_id)
@@ -1633,7 +1634,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_intern_row.author_id)
@@ -1649,7 +1650,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -1676,7 +1677,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_gender_row.book_id)
@@ -1691,7 +1692,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_intern_row.gender_id)
@@ -1724,7 +1725,7 @@ impl IBookRepository for BookRepository {
                 AVG(br.review)::float8 AS gender_average,
                 COUNT(br.review) AS total_reviews
             FROM gender g
-            WHERE g.id = $1 AND g.deleted = false
+            WHERE g.id = $1 AND g.deleted_at IS NULL
             JOIN book_gender bg ON g.id = bg.gender_id
             JOIN book b ON b.id = bg.book_id
             JOIN book_review br ON br.book_id = b.id
@@ -1752,7 +1753,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -1768,7 +1769,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -1789,7 +1790,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -1805,7 +1806,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -1829,7 +1830,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -1844,7 +1845,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -1860,7 +1861,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -1887,7 +1888,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_id)
@@ -1902,7 +1903,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -1935,7 +1936,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book
                 WHERE
-                    deleted = false
+                    deleted_at IS NULL
                 ORDER BY pages ASC
                 LIMIT $1
                 OFFSET $2;
@@ -1958,7 +1959,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -1979,7 +1980,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -1995,7 +1996,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -2019,7 +2020,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -2034,7 +2035,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -2050,7 +2051,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -2077,7 +2078,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.id)
@@ -2092,7 +2093,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -2125,7 +2126,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book
                 WHERE
-                    deleted = false
+                    deleted_at IS NULL
                 ORDER BY pages DESC
                 LIMIT $1
                 OFFSET $2;
@@ -2148,7 +2149,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -2169,7 +2170,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -2185,7 +2186,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -2209,7 +2210,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -2224,7 +2225,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -2240,7 +2241,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -2267,7 +2268,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.id)
@@ -2282,7 +2283,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -2318,7 +2319,7 @@ impl IBookRepository for BookRepository {
                 book_id,
                 COUNT(user_id) as readed_book
             FROM book_user
-            WHERE reading_status = $1 AND deleted = false
+            WHERE reading_status = $1 AND deleted_at IS NULL
             GROUP BY book_id
             ORDER BY readed_book DESC
             LIMIT $2
@@ -2343,7 +2344,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -2359,7 +2360,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -2380,7 +2381,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -2396,7 +2397,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -2420,7 +2421,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -2435,7 +2436,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -2451,7 +2452,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -2478,7 +2479,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_id)
@@ -2493,7 +2494,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -2531,7 +2532,7 @@ impl IBookRepository for BookRepository {
                 AVG(br.review)::float8 AS book_average,
                 COUNT(br.review) AS total_reviews
             FROM book b
-            WHERE p.deleted = false
+            WHERE p.deleted_at IS NULL
             JOIN book_review br ON br.book_id = b.id
             GROUP BY b.id, b.name
             ORDER BY book_average DESC
@@ -2556,7 +2557,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -2572,7 +2573,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_row.id)
@@ -2593,7 +2594,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         publisher
                     WHERE
-                        id = $1 AND deleted = false;
+                        id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_row.publisher_id)
@@ -2609,7 +2610,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     publisher_image
                 WHERE
-                    publisher_id = $1 AND deleted = false;
+                    publisher_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(publisher_row.id)
@@ -2633,7 +2634,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_author
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -2648,7 +2649,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             author
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_author_row.author_id)
@@ -2664,7 +2665,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         author_image
                     WHERE
-                        author_id = $1 AND deleted = false;
+                        author_id = $1 AND deleted_at IS NULL;
                     "#
                 )
                     .bind(author_row.id)
@@ -2691,7 +2692,7 @@ impl IBookRepository for BookRepository {
                     FROM
                         book_gender
                     WHERE
-                        book_id = $1 AND deleted = false;
+                        book_id = $1 AND deleted_at IS NULL;
                 "#
             )
             .bind(book_id)
@@ -2706,7 +2707,7 @@ impl IBookRepository for BookRepository {
                         FROM
                             gender
                         WHERE
-                            id = $1 AND deleted = false;
+                            id = $1 AND deleted_at IS NULL;
                     "#
                 )
                 .bind(book_gender_row.gender_id)
@@ -2759,7 +2760,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -2774,7 +2775,7 @@ impl IBookRepository for BookRepository {
                     DELETE FROM
                         book_image
                     WHERE
-                        id = $1
+                        id = $1;
                     "#
                 )
                     .bind(image_row.unwrap().id)
@@ -2817,7 +2818,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_image
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
                 "#
             )
                 .bind(book_id)
@@ -2849,7 +2850,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_author
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_id)
@@ -2859,17 +2860,20 @@ impl IBookRepository for BookRepository {
 
         let mut continue_old_book_authors: Vec<Uuid> = Vec::new();
 
+        let actual_date: NaiveDateTime = Utc::now().naive_utc();
+
         for book_author_row in book_author_rows {
             if !authors_id.contains(&book_author_row.author_id) {
                 sqlx::query(r#"
                     UPDATE
                         book_author
                     SET
-                        deleted = true
+                        deleted_at = $1
                     WHERE
-                        book_id = $1 AND author_id = $2
+                        book_id = $2 AND author_id = $3;
                     "#
                 )
+                    .bind(actual_date)
                     .bind(book_id)
                     .bind(book_author_row.author_id)
                     .execute(&self.pool)
@@ -2905,7 +2909,7 @@ impl IBookRepository for BookRepository {
                 FROM
                     book_gender
                 WHERE
-                    book_id = $1 AND deleted = false;
+                    book_id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_id)
@@ -2921,11 +2925,12 @@ impl IBookRepository for BookRepository {
                     UPDATE
                         book_gender
                     SET
-                        deleted = true
+                        deleted_at = $1
                     WHERE
-                        book_id = $1 AND gender_id = $2
+                        book_id = $2 AND gender_id = $3;
                     "#
                 )
+                    .bind(actual_date)
                     .bind(book_id)
                     .bind(book_gender_row.gender_id)
                     .execute(&self.pool)
@@ -2961,7 +2966,7 @@ impl IBookRepository for BookRepository {
             SET
                 title = $2, subtitle = $3, publisher_id = $4, series_collection = $5, volume = $6, edition = $7, publication_year = $8, pages = $9, language = $10, isbn = $11, synopsis = $12
             WHERE
-                id = $1 AND deleted = false;
+                id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(book_id)
@@ -2984,15 +2989,18 @@ impl IBookRepository for BookRepository {
     }
 
     async fn delete_book(&self, book_id: Uuid, _user_id: Uuid) -> Result<(), String> {
+        let actual_date: NaiveDateTime = Utc::now().naive_utc();
+
         sqlx::query(r#"
             UPDATE
                 book_image
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                book_id = $1
+                book_id = $2;
             "#
         )
+            .bind(actual_date)
             .bind(book_id)
             .execute(&self.pool)
             .await
@@ -3002,11 +3010,12 @@ impl IBookRepository for BookRepository {
             UPDATE
                 book_author
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                book_id = $1
+                book_id = $2;
             "#
         )
+            .bind(actual_date)
             .bind(book_id)
             .execute(&self.pool)
             .await
@@ -3016,11 +3025,12 @@ impl IBookRepository for BookRepository {
             UPDATE
                 book_gender
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                book_id = $1
+                book_id = $2;
             "#
         )
+            .bind(actual_date)
             .bind(book_id)
             .execute(&self.pool)
             .await
@@ -3030,11 +3040,12 @@ impl IBookRepository for BookRepository {
             UPDATE
                 book
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                id = $1
+                id = $2;
             "#
         )
+            .bind(actual_date)
             .bind(book_id)
             .execute(&self.pool)
             .await
@@ -3050,7 +3061,7 @@ impl IBookRepository for BookRepository {
             FROM
                 book_image
             WHERE
-                deleted = true
+                deleted_at IS NOT NULL;
             "#
         )
             .fetch_all(&self.pool)
@@ -3064,7 +3075,7 @@ impl IBookRepository for BookRepository {
         sqlx::query(r#"
             DELETE FROM
                 book_image
-            WHERE deleted = true
+            WHERE deleted_at IS NOT NULL;
             "#
         )
             .execute(&self.pool)
@@ -3074,7 +3085,7 @@ impl IBookRepository for BookRepository {
         sqlx::query(r#"
             DELETE FROM
                 book_author
-            WHERE deleted = true
+            WHERE deleted_at IS NOT NULL;
             "#
         )
             .execute(&self.pool)
@@ -3084,7 +3095,7 @@ impl IBookRepository for BookRepository {
         sqlx::query(r#"
             DELETE FROM
                 book_gender
-            WHERE deleted = true
+            WHERE deleted_at IS NOT NULL;
             "#
         )
             .execute(&self.pool)
@@ -3094,7 +3105,7 @@ impl IBookRepository for BookRepository {
         sqlx::query(r#"
             DELETE FROM
                 book
-            WHERE deleted = true
+            WHERE deleted_at IS NOT NULL;
             "#
         )
             .execute(&self.pool)
