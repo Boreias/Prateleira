@@ -8,6 +8,5 @@ pub struct UserProfileRow {
     pub id: Uuid,
     pub name: String,
     pub bio: Option<String>,
-    pub birth_date: NaiveDate,
-    pub avatar: Option<String>
+    pub birth_date: NaiveDate
 }

@@ -233,7 +233,7 @@ impl IUserRepository for UserRepository {
     async fn get_user_by_id(&self, id: Uuid) -> Result<UserProfile, String> {
         let user_profile: UserProfileRow = sqlx::query_as(r#"
             SELECT
-                up.id, up.name, up.bio, up.birth_date, up.avatar, up.created_at, up.updated_at
+                up.id, up.name, up.bio, up.birth_date
             FROM
                 user_profile AS up
             INNER JOIN
@@ -246,7 +246,28 @@ impl IUserRepository for UserRepository {
         .await
         .map_err(|e| e.to_string())?;
 
-        let user: UserProfile = user_profile.into();
+        let mut user: UserProfile = user_profile.into();
+
+        let mut avatar: Option<String> = None;
+
+        let image_row: Option<ImageRow> = sqlx::query_as(r#"
+            SELECT
+                id, original_name, image_path
+            FROM
+                publisher_image
+            WHERE
+                publisher_id = $1 AND deleted = false;
+            "#
+        )
+            .bind(user.get_id())
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if image_row.is_some() {
+            avatar = Some(image_row.unwrap().image_path);
+        }
+        user.set_avatar(avatar);
 
         Ok(user)
     }
@@ -254,7 +275,7 @@ impl IUserRepository for UserRepository {
     async fn get_user_by_email(&self, email: String) -> Result<Option<UserProfile>, String> {
         let user_profile: Option<UserProfileRow> = sqlx::query_as(r#"
             SELECT
-                up.id, up.name, up.bio, up.birth_date, up.avatar, up.created_at, up.updated_at
+                up.id, up.name, up.bio, up.birth_date
             FROM
                 user_profile AS up
             INNER JOIN
@@ -268,7 +289,29 @@ impl IUserRepository for UserRepository {
         .map_err(|e| e.to_string())?;
 
         if user_profile.is_some() {
-            let user: UserProfile = user_profile.unwrap().into();
+            let mut user: UserProfile = user_profile.unwrap().into();
+
+            let mut avatar: Option<String> = None;
+
+            let image_row: Option<ImageRow> = sqlx::query_as(r#"
+                SELECT
+                    id, original_name, image_path
+                FROM
+                    publisher_image
+                WHERE
+                    publisher_id = $1 AND deleted = false;
+                "#
+            )
+                .bind(user.get_id())
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
+
+            if image_row.is_some() {
+                avatar = Some(image_row.unwrap().image_path);
+            }
+
+            user.set_avatar(avatar);
 
             return Ok(Some(user))
         }
@@ -280,7 +323,7 @@ impl IUserRepository for UserRepository {
         let format_name = format!("%{}%", name);
         let user_profiles: Vec<UserProfileRow> = sqlx::query_as(r#"
             SELECT
-                up.id, up.name, up.bio, up.birth_date, up.avatar, up.created_at, up.updated_at
+                up.id, up.name, up.bio, up.birth_date
             FROM
                 user_profile AS up
             INNER JOIN
@@ -300,7 +343,29 @@ impl IUserRepository for UserRepository {
         let mut users: Vec<UserProfile> = Vec::new();
 
         for user_profile in user_profiles {
-            let user: UserProfile = user_profile.into();
+            let mut user: UserProfile = user_profile.into();
+
+            let mut avatar: Option<String> = None;
+
+            let image_row: Option<ImageRow> = sqlx::query_as(r#"
+                SELECT
+                    id, original_name, image_path
+                FROM
+                    publisher_image
+                WHERE
+                    publisher_id = $1 AND deleted = false;
+                "#
+            )
+                .bind(user.get_id())
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
+
+            if image_row.is_some() {
+                avatar = Some(image_row.unwrap().image_path);
+            }
+
+            user.set_avatar(avatar);
 
             users.push(user);
         }
@@ -446,7 +511,7 @@ impl IUserRepository for UserRepository {
     ) -> Result<(), String> {
         let check_user_row: Option<UserProfileRow> = sqlx::query_as(r#"
             SELECT
-                up.id, up.name, up.bio, up.birth_date, up.avatar
+                up.id, up.name, up.bio, up.birth_date
             FROM
                 user_profile AS up
             INNER JOIN
