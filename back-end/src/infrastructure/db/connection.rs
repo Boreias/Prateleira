@@ -91,8 +91,8 @@ mod tests {
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[1].get("column_name");
         let data_type: String = schema[1].get("data_type");
@@ -155,8 +155,8 @@ mod tests {
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[1].get("column_name");
         let data_type: String = schema[1].get("data_type");
@@ -225,8 +225,8 @@ mod tests {
         let column_name: String = schema[1].get("column_name");
         let data_type: String = schema[1].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[2].get("column_name");
         let data_type: String = schema[2].get("data_type");
@@ -295,8 +295,8 @@ mod tests {
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[1].get("column_name");
         let data_type: String = schema[1].get("data_type");
@@ -371,8 +371,8 @@ mod tests {
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[1].get("column_name");
         let data_type: String = schema[1].get("data_type");
@@ -447,8 +447,8 @@ mod tests {
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[1].get("column_name");
         let data_type: String = schema[1].get("data_type");
@@ -577,8 +577,8 @@ mod tests {
         let column_name: String = schema[1].get("column_name");
         let data_type: String = schema[1].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[2].get("column_name");
         let data_type: String = schema[2].get("data_type");
@@ -653,8 +653,8 @@ mod tests {
         let column_name: String = schema[1].get("column_name");
         let data_type: String = schema[1].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[2].get("column_name");
         let data_type: String = schema[2].get("data_type");
@@ -729,8 +729,8 @@ mod tests {
         let column_name: String = schema[2].get("column_name");
         let data_type: String = schema[2].get("data_type");
 
-        assert_eq!(column_name, "deleted".to_string());
-        assert_eq!(data_type, "boolean".to_string());
+        assert_eq!(column_name, "deleted_at".to_string());
+        assert_eq!(data_type, "timestamp without time zone".to_string());
 
         let column_name: String = schema[3].get("column_name");
         let data_type: String = schema[3].get("data_type");
@@ -1022,7 +1022,7 @@ mod tests {
             ORDER BY column_name ASC;
         "#).fetch_all(&pool).await.unwrap();
 
-        assert_eq!(schema.len(), 2);
+        assert_eq!(schema.len(), 3);
 
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
@@ -1036,8 +1036,8 @@ mod tests {
         assert_eq!(column_name, "id".to_string());
         assert_eq!(data_type, "uuid".to_string());
 
-        let column_name: String = schema[1].get("column_name");
-        let data_type: String = schema[1].get("data_type");
+        let column_name: String = schema[2].get("column_name");
+        let data_type: String = schema[2].get("data_type");
 
         assert_eq!(column_name, "token".to_string());
         assert_eq!(data_type, "character varying".to_string());

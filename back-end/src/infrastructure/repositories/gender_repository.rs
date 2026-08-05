@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 use sqlx::{PgPool, Row};
+use chrono::{NaiveDateTime, Utc};
 
 use crate::domain::irepositories::igender_repository::IGenderRepository;
 use crate::infrastructure::db::models::gender_row::GenderRow;
@@ -72,7 +73,7 @@ impl IGenderRepository for GenderRepository {
             FROM
                 gender
             WHERE
-                id = $1 AND deleted = false
+                id = $1 AND deleted_at IS NULL;
             "#
         )
             .bind(id)
@@ -93,9 +94,9 @@ impl IGenderRepository for GenderRepository {
             FROM
                 gender
             WHERE
-                name LIKE $1 AND deleted = false
+                name LIKE $1 AND deleted_at IS NULL
             LIMIT $2
-            OFFSET $3
+            OFFSET $3;
             "#
         )
             .bind(format_name)
@@ -121,7 +122,7 @@ impl IGenderRepository for GenderRepository {
             FROM
                 book_gender
             WHERE
-                book_id = $1
+                book_id = $1;
             "#
         )
             .bind(book_id)
@@ -141,9 +142,9 @@ impl IGenderRepository for GenderRepository {
                 FROM
                     gender
                 WHERE
-                    id = $1 AND deleted = false
+                    id = $1 AND deleted_at IS NULL
                 LIMIT $2
-                OFFSET $3
+                OFFSET $3;
                 "#
             )
                 .bind(id)
@@ -167,7 +168,7 @@ impl IGenderRepository for GenderRepository {
                 book_id
             FROM
                 book_author
-            WHERE author_id = $1
+            WHERE author_id = $1;
             "#
         )
             .bind(author_id)
@@ -187,7 +188,7 @@ impl IGenderRepository for GenderRepository {
                 FROM
                     book_gender
                 WHERE
-                    book_id = $1
+                    book_id = $1;
                 "#
             )
                 .bind(book_id)
@@ -204,9 +205,9 @@ impl IGenderRepository for GenderRepository {
                     FROM
                         gender
                     WHERE
-                        id = $1 AND deleted = false
+                        id = $1 AND deleted_at IS NULL
                     LIMIT $2
-                    OFFSET $3
+                    OFFSET $3;
                     "#
                 )
                     .bind(id)
@@ -232,7 +233,7 @@ impl IGenderRepository for GenderRepository {
                     FROM
                         book
                     WHERE
-                        publisher_id = $1 AND deleted = false;
+                        publisher_id = $1 AND deleted_at IS NULL
                     LIMIT $2
                     OFFSET $3;
             "#
@@ -272,9 +273,9 @@ impl IGenderRepository for GenderRepository {
                         id, name
                     FROM
                         gender
-                    WHERE id = $1 AND deleted = false
+                    WHERE id = $1 AND deleted_at IS NULL
                     LIMIT $2
-                    OFFSET $3
+                    OFFSET $3;
                     "#
                 )
                     .bind(id)
@@ -303,11 +304,11 @@ impl IGenderRepository for GenderRepository {
                 book_id,
                 COUNT(user_id) as readed_book
             FROM book_user
-            WHERE reading_status = $1 AND deleted = false
+            WHERE reading_status = $1 AND deleted_at IS NULL
             GROUP BY book_id
             ORDER BY readed_book DESC
             LIMIT $2
-            OFFSET $3
+            OFFSET $3;
             "#
         )
             .bind(ReadingStatus::Lido as i32)
@@ -347,9 +348,9 @@ impl IGenderRepository for GenderRepository {
                 SELECT
                     id, name
                 FROM gender
-                WHERE id IN ($1) AND deleted = false
+                WHERE id IN ($1) AND deleted_at IS NULL
                 LIMIT $2
-                OFFSET $3
+                OFFSET $3;
             "#
         )
             .bind(param)
@@ -380,13 +381,13 @@ impl IGenderRepository for GenderRepository {
                 AVG(br.review)::float8 AS genre_average,
                 COUNT(br.review) AS total_reviews
             FROM genre g
-            WHERE g.deleted = false
+            WHERE g.deleted_at IS NULL
             JOIN book b ON b.genre_id = g.id
             JOIN book_review br ON br.book_id = b.id
             GROUP BY g.id, g.name
             ORDER BY genre_average DESC
             LIMIT $1
-            OFFSET $2
+            OFFSET $2;
             "#
         )
             .bind(page_size)
@@ -430,15 +431,18 @@ impl IGenderRepository for GenderRepository {
     }
 
     async fn delete_gender(&self, id: Uuid, _user_id: Uuid) -> Result<(), String> {
+        let actual_date: NaiveDateTime = Utc::now().naive_utc();
+
         sqlx::query(r#"
             UPDATE
                 gender
             SET
-                deleted = true
+                deleted_at = $1
             WHERE
-                id = $1
+                id = $2;
             "#
         )
+            .bind(actual_date)
             .bind(id)
             .execute(&self.pool)
             .await
@@ -452,7 +456,7 @@ impl IGenderRepository for GenderRepository {
             DELETE FROM
                 gender
             WHERE
-                deleted = true
+                deleted_at IS NOT NULL;
             "#
         )
             .execute(&self.pool)

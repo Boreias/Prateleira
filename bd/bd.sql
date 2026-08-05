@@ -3,7 +3,7 @@ CREATE DATABASE Prateleira;
 CREATE TABLE author (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE author_image (
@@ -11,7 +11,7 @@ CREATE TABLE author_image (
     original_name VARCHAR(255) NOT NULL,
     image_path TEXT NOT NULL,
     author_id UUID NOT NULL REFERENCES author(id) ON DELETE CASCADE,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE publisher (
@@ -19,7 +19,7 @@ CREATE TABLE publisher (
     name VARCHAR(255) NOT NULL,
     site VARCHAR(255),
     email VARCHAR(255),
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE publisher_image (
@@ -27,13 +27,13 @@ CREATE TABLE publisher_image (
     original_name VARCHAR(255) NOT NULL,
     image_path TEXT NOT NULL,
     publisher_id UUID NOT NULL REFERENCES publisher(id) ON DELETE CASCADE,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE gender (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) UNIQUE NOT NULL,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE book (
@@ -49,7 +49,7 @@ CREATE TABLE book (
     language VARCHAR(100),
     isbn VARCHAR(25) NOT NULL,
     synopsis TEXT,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE book_image (
@@ -57,21 +57,21 @@ CREATE TABLE book_image (
     original_name VARCHAR(255) NOT NULL,
     image_path TEXT NOT NULL,
     book_id UUID NOT NULL REFERENCES book(id) ON DELETE CASCADE,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE book_author(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id UUID NOT NULL REFERENCES Book(id) ON DELETE CASCADE,
     author_id UUID NOT NULL REFERENCES Author(id) ON DELETE CASCADE,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE book_gender(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     book_id UUID NOT NULL REFERENCES Book(id) ON DELETE CASCADE,
     gender_id UUID NOT NULL REFERENCES Gender(id) ON DELETE CASCADE,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE reading_status(
