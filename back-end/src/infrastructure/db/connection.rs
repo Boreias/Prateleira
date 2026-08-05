@@ -1027,6 +1027,12 @@ mod tests {
         let column_name: String = schema[0].get("column_name");
         let data_type: String = schema[0].get("data_type");
 
+        assert_eq!(column_name, "email".to_string());
+        assert_eq!(data_type, "character varying".to_string());
+
+        let column_name: String = schema[1].get("column_name");
+        let data_type: String = schema[1].get("data_type");
+
         assert_eq!(column_name, "id".to_string());
         assert_eq!(data_type, "uuid".to_string());
 

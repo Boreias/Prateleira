@@ -115,6 +115,7 @@ CREATE TABLE user_refresh_token (
 
 CREATE TABLE user_email_verification (
     id UUID PRIMARY KEY REFERENCES user_auth(id),
+    email VARCHAR(255) UNIQUE NOT NULL,
     token VARCHAR(255) NOT NULL
 );
 

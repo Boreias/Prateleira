@@ -9,7 +9,7 @@ impl From<UserProfileRow> for UserProfile {
             row.name,
             row.bio,
             row.birth_date,
-            row.avatar
+            None
         )
     }
 }

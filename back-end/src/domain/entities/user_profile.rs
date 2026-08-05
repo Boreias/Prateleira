@@ -60,4 +60,8 @@ impl UserProfile {
     pub fn set_birth_date(&mut self, new_birth_date: NaiveDate) {
         self.birth_date = new_birth_date;
     }
+
+    pub fn set_avatar(&mut self, new_avatar: Option<String>) {
+        self.avatar = new_avatar;
+    }
 }
