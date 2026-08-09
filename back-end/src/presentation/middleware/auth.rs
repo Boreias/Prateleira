@@ -1,11 +1,12 @@
 use axum::{
     extract::{ConnectInfo, Request, State},
-    http::{self, StatusCode},
+    http::StatusCode,
     middleware::Next,
     response::Response
 };
 use std::net::SocketAddr;
 use uuid::Uuid;
+use axum_extra::extract::cookie::CookieJar;
 
 use crate::infrastructure::app_state::AppState;
 use crate::infrastructure::crypto::crypto::validate_jwt;
@@ -15,20 +16,19 @@ use crate::infrastructure::location::location::get_location;
 
 pub async fn auth(
     State(state): State<AppState>,
+    jar: CookieJar,
     mut req: Request,
-    next: Next
+    next: Next,
 ) -> Result<Response, StatusCode> {
-    let auth_header = req.headers()
-        .get(http::header::AUTHORIZATION)
-        .and_then(|header| header.to_str().ok());
+    let auth_cookie = jar.get("access_token");
 
-    let auth_header = if let Some(auth_header) = auth_header {
-        auth_header
+    let auth_cookie = if let Some(auth_cookie) = auth_cookie {
+        auth_cookie
     } else {
         return Err(StatusCode::UNAUTHORIZED)
     };
 
-    if let Some(user_id) = authorize_current_user(auth_header).await {
+    if let Some(user_id) = authorize_current_user(auth_cookie.value()).await {
         if let Some(ConnectInfo(addr)) = req.extensions().get::<ConnectInfo<SocketAddr>>() {
             let country = get_location(addr.ip()).expect("Erro na obtenção da localização");
 

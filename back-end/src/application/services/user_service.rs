@@ -2,7 +2,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 use chrono::NaiveDate;
 use axum::body::Bytes;
-use tower_cookies::Cookies;
+use axum_extra::extract::cookie::CookieJar;
 
 use crate::domain::irepositories::iuser_repository::IUserRepository;
 use crate::infrastructure::repositories::user_repository::UserRepository;
@@ -61,12 +61,12 @@ impl UserService {
         return self.repository.get_user_by_name(name, skip.unwrap_or(0), page_size.unwrap_or(20)).await;
     }
 
-    pub async fn auth_user(&self, username_or_email: String, password: String, country: String, cookies: Cookies) -> Result<(), String> {
-        return self.repository.auth_user(username_or_email, password, country, cookies).await;
+    pub async fn auth_user(&self, username_or_email: String, password: String, country: String, jar: CookieJar) -> Result<(), String> {
+        return self.repository.auth_user(username_or_email, password, country, jar).await;
     }
 
-    pub async fn refresh_token(&self, id: Uuid, token: String, cookies: Cookies) -> Result<(), String> {
-        return self.repository.refresh_token(id, token, cookies).await;
+    pub async fn refresh_token(&self, id: Uuid, token: String, jar: CookieJar) -> Result<(), String> {
+        return self.repository.refresh_token(id, token, jar).await;
     }
 
     pub async fn alter_user_profile(

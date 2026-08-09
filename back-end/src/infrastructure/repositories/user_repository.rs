@@ -10,7 +10,7 @@ use tokio::{
     fs::remove_file
 };
 use std::env;
-use tower_cookies::{Cookie, Cookies, cookie::SameSite::Lax};
+use axum_extra::extract::cookie::{Cookie, CookieJar};
 use argon2::{
     password_hash::{
         rand_core::OsRng,
@@ -373,7 +373,7 @@ impl IUserRepository for UserRepository {
         Ok(users)
     }
 
-    async fn auth_user(&self, username_or_email: String, password: String, country: String, cookies: Cookies) -> Result<(), String> {
+    async fn auth_user(&self, username_or_email: String, password: String, country: String, jar: CookieJar) -> Result<(), String> {
         let user_auth_row: Option<UserAuthRow> = sqlx::query_as(r#"
             SELECT
                 id, username, email, password_hash, salt, country, is_email_verified, created_at, updated_at, deleted_at
@@ -446,14 +446,7 @@ impl IUserRepository for UserRepository {
 
             let token = generate_jwt(user_auth.get_id()).expect("Erro ao gerar token");
 
-            let cookie = Cookie::build(("access_token", token))
-                .path("/")
-                .secure(true)
-                .http_only(true)
-                .same_site(Lax)
-                .build();
-
-            cookies.add(cookie);
+            let _ = jar.add(Cookie::new("access_token", token));
 
             return Ok(());
         }
@@ -461,7 +454,7 @@ impl IUserRepository for UserRepository {
         return Err(String::from("Usuário inválido"));
     }
 
-    async fn refresh_token(&self, id: Uuid, token: String, cookies: Cookies) -> Result<(), String> {
+    async fn refresh_token(&self, id: Uuid, token: String, jar: CookieJar) -> Result<(), String> {
         let user_refresh_token_row: Option<UserRefreshTokenRow> = sqlx::query_as(r#"
             SELECT
                 id, token, expire_at
@@ -488,14 +481,7 @@ impl IUserRepository for UserRepository {
 
         let access_token = generate_jwt(user_refresh_token.id).expect("Erro ao gerar token");
 
-        let cookie = Cookie::build(("access_token", access_token))
-            .path("/")
-            .secure(true)
-            .http_only(true)
-            .same_site(Lax)
-            .build();
-
-        cookies.add(cookie);
+        let _ = jar.add(Cookie::new("access_token", access_token));
 
         return Ok(());
     }
