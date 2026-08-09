@@ -2,7 +2,7 @@ use uuid::Uuid;
 use async_trait::async_trait;
 use chrono::NaiveDate;
 use axum::body::Bytes;
-use tower_cookies::{Cookies};
+use axum_extra::extract::cookie::CookieJar;
 
 use crate::domain::entities::user_profile::UserProfile;
 
@@ -30,9 +30,9 @@ pub trait IUserRepository {
 
     async fn get_user_by_name(&self, name: String, skip: i32, page_size: i32) -> Result<Vec<UserProfile>, String>;
 
-    async fn auth_user(&self, username_or_email: String, password: String, country: String, cookies: Cookies) -> Result<(), String>;
+    async fn auth_user(&self, username_or_email: String, password: String, country: String, jar: CookieJar) -> Result<(), String>;
 
-    async fn refresh_token(&self, id: Uuid, token: String, cookies: Cookies) -> Result<(), String>;
+    async fn refresh_token(&self, id: Uuid, token: String, jar: CookieJar) -> Result<(), String>;
 
     async fn alter_user_profile(
         &mut self,

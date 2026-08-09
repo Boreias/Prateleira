@@ -25,10 +25,7 @@ use serde::{
 use std::net::SocketAddr;
 use chrono::NaiveDate;
 use axum::body::Bytes;
-use tower_cookies::{
-    CookieManagerLayer,
-    Cookies
-};
+use axum_extra::extract::cookie::CookieJar;
 
 use crate::domain::entities::user_profile::UserProfile;
 use crate::application::services::user_service::UserService;
@@ -48,11 +45,11 @@ pub fn user_routes(state: AppState) -> Router<AppState> {
         .route("/id", get(get_user_by_id))
         .route("/email", get(get_user_by_email))
         .route("/name", get(get_user_by_name))
-        .route("/auth", get(auth_user)).layer(CookieManagerLayer::new())
+        .route("/auth", get(auth_user))
         .route("/refresh", get(refresh_user_token))
-        .route("/alter", put(update_user)).route_layer(from_fn_with_state(state.clone(), auth))
+        .route("/alter", put(update_user)).layer(from_fn_with_state(state.clone(), auth))
         .route("/change_password", put(change_password))
-        .route("/delete", delete(delete_user)).route_layer(from_fn_with_state(state.clone(), auth))
+        .route("/delete", delete(delete_user)).layer(from_fn_with_state(state.clone(), auth))
 }
 
 
@@ -214,7 +211,7 @@ async fn auth_user(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Query(payload): Query<AuthUserRequest>,
-    cookies: Cookies
+    jar: CookieJar
 ) -> Result<(StatusCode, String), (StatusCode, String)> {
     let service = UserService::new((*state.db_pool).clone());
 
@@ -222,7 +219,7 @@ async fn auth_user(
 
     let country = get_location(ip).expect("Erro na obtenção da localização");
 
-    match service.auth_user(payload.username_or_email, payload.password, country, cookies).await {
+    match service.auth_user(payload.username_or_email, payload.password, country, jar).await {
         Ok(_) => return Ok((StatusCode::OK, String::from("Usuário autenticado com sucesso"))),
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
     }
@@ -239,11 +236,11 @@ async fn refresh_user_token(
     ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     Query(payload): Query<RefreshTokenRequest>,
-    cookies: Cookies
+    jar: CookieJar
 ) -> Result<(StatusCode, String), (StatusCode, String)> {
     let service = UserService::new((*state.db_pool).clone());
 
-    match service.refresh_token(payload.id, payload.token, cookies).await {
+    match service.refresh_token(payload.id, payload.token, jar).await {
         Ok(_) => return Ok((StatusCode::OK, String::from("Novo token gerado com sucesso"))),
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
     }
