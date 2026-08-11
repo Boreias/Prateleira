@@ -54,7 +54,7 @@ pub async fn auth(
                 req.extensions_mut().insert(user_id);
                 return Ok(next.run(req).await);
             } else {
-                return Err(StatusCode::BAD_REQUEST);
+                return Err(StatusCode::UNAUTHORIZED);
             }
         } else {
             return Err(StatusCode::BAD_REQUEST);

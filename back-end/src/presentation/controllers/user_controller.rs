@@ -4,13 +4,13 @@ use axum::{
     Router,
     extract::{
         ConnectInfo,
+        Extension,
         Multipart,
         Query,
         State
     },
     http::StatusCode,
     middleware::from_fn_with_state,
-    response::IntoResponse,
     routing::{
         delete,
         get,
@@ -18,10 +18,7 @@ use axum::{
         put
     }
 };
-use serde::{
-    Deserialize,
-    Serialize
-};
+use serde::Deserialize;
 use std::net::SocketAddr;
 use chrono::NaiveDate;
 use axum::body::Bytes;
@@ -33,10 +30,6 @@ use crate::infrastructure::location::location::get_location;
 use crate::infrastructure::app_state::AppState;
 use crate::presentation::middleware::auth::auth;
 
-#[derive(Serialize)]
-pub struct ApiResponse {
-    pub message: String
-}
 
 pub fn user_routes(state: AppState) -> Router<AppState> {
     Router::new()
@@ -48,7 +41,7 @@ pub fn user_routes(state: AppState) -> Router<AppState> {
         .route("/auth", get(auth_user))
         .route("/refresh", get(refresh_user_token))
         .route("/alter", put(update_user)).layer(from_fn_with_state(state.clone(), auth))
-        .route("/change_password", put(change_password))
+        .route("/change_password", put(change_password)).layer(from_fn_with_state(state.clone(), auth))
         .route("/delete", delete(delete_user)).layer(from_fn_with_state(state.clone(), auth))
 }
 
@@ -57,7 +50,7 @@ async fn create_user(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
     mut multipart: Multipart
-) -> impl IntoResponse {
+) -> Result<(StatusCode, String), (StatusCode, String)> {
     let service = UserService::new((*state.db_pool).clone());
 
     let ip = addr.ip().clone();
@@ -105,12 +98,12 @@ async fn create_user(
     let country = get_location(ip).expect("Erro na obtenção da localização");
 
     match service.create_user(username.unwrap(), email.unwrap(), password.unwrap(), name.unwrap(), bio, birth_date.unwrap(), country, file_name, file_content).await {
-        Ok(_) => return(StatusCode::CREATED, "Usuário registrado com sucesso".to_string()),
+        Ok(_) => return Ok((StatusCode::CREATED, "Usuário registrado com sucesso".to_string())),
         Err(e) => {
             if e == String::from("Nome de usuário já em uso, favor digitar outro") || e == String::from("Email já cadastrado") {
-                return(StatusCode::CONFLICT, e.to_string())
+                return Err((StatusCode::CONFLICT, e.to_string()))
             } else {
-                return(StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
             }
         }
     }
@@ -250,11 +243,11 @@ async fn refresh_user_token(
 pub async fn update_user(
     ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
+    Extension(user_id): Extension<Uuid>,
     mut multipart: Multipart
-) -> impl IntoResponse {
+) -> Result<(StatusCode, String), (StatusCode, String)> {
     let mut service = UserService::new((*state.db_pool).clone());
 
-    let mut user_id: Option<Uuid> = None;
     let mut name: Option<String> = None;
     let mut bio: Option<String> = None;
     let mut birth_date: Option<NaiveDate> = None;
@@ -265,10 +258,6 @@ pub async fn update_user(
         let field_name = field.name().unwrap().to_string();
 
         match field_name.as_str() {
-            "id" => {
-                let value = field.text().await.unwrap();
-                user_id = Some(Uuid::parse_str(&value).unwrap());
-            }
             "name" => {
                 name = Some(field.text().await.unwrap());
             }
@@ -287,46 +276,41 @@ pub async fn update_user(
         }
     }
 
-    match service.alter_user_profile(user_id.unwrap(), name.unwrap(), bio, birth_date.unwrap(), file_name, file_content).await {
-        Ok(_) => return(StatusCode::OK, "Usuário alterado com sucesso".to_string()),
-        Err(e) => return(StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    match service.alter_user_profile(user_id, name.unwrap(), bio, birth_date.unwrap(), file_name, file_content).await {
+        Ok(_) => return Ok((StatusCode::OK, "Usuário alterado com sucesso".to_string())),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
     }
 }
 
+
 #[derive(Deserialize)]
 struct ChangePasswordRequest {
-    id: Uuid,
     new_password: String
 }
 
 async fn change_password(
     ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
+    Extension(user_id): Extension<Uuid>,
     Query(payload): Query<ChangePasswordRequest>
 ) -> Result<(StatusCode, String), (StatusCode, String)> {
     let mut service = UserService::new((*state.db_pool).clone());
 
-    match service.change_password(payload.id, payload.new_password).await {
+    match service.change_password(user_id, payload.new_password).await {
         Ok(_) => Ok((StatusCode::OK, "Senha alterada com sucesso".to_string())),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
     }
 }
 
 
-
-#[derive(Deserialize)]
-struct DeleteUserRequest {
-    id: Uuid
-}
-
 async fn delete_user(
     ConnectInfo(_addr): ConnectInfo<SocketAddr>,
     State(state): State<AppState>,
-    Query(payload): Query<DeleteUserRequest>
+    Extension(user_id): Extension<Uuid>,
 ) -> Result<(StatusCode, String), (StatusCode, String)> {
     let service = UserService::new((*state.db_pool).clone());
 
-    match service.delete_user(payload.id).await {
+    match service.delete_user(user_id).await {
         Ok(_) => Ok((StatusCode::OK, "Usuário removido com sucesso".to_string())),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
     }
