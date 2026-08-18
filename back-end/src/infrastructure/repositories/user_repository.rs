@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use chrono::{NaiveDate, NaiveDateTime, Utc};
+use chrono::{Duration, NaiveDate, NaiveDateTime, Utc};
 use sqlx::{PgPool, Row};
 use async_trait::async_trait;
 use axum::{
@@ -23,7 +23,8 @@ use argon2::{
 };
 
 
-use crate::{domain::irepositories::iuser_repository::IUserRepository, infrastructure::db::models::user_refresh_token_row::UserRefreshTokenRow};
+use crate::domain::irepositories::iuser_repository::IUserRepository;
+use crate::infrastructure::db::models::user_refresh_token_row::UserRefreshTokenRow;
 use crate::domain::entities::user_auth::UserAuth;
 use crate::domain::entities::user_profile::UserProfile;
 use crate::infrastructure::db::models::user_auth_row::UserAuthRow;
@@ -32,7 +33,7 @@ use crate::infrastructure::db::models::user_info_row::UserInfoRow;
 use crate::infrastructure::db::models::image_row::ImageRow;
 use crate::infrastructure::common::consts::UPLOADS_IMAGE_PATH;
 
-use crate::infrastructure::crypto::crypto::{derive_password_hash, generate_salt, generate_jwt};
+use crate::infrastructure::crypto::crypto::{derive_password_hash, generate_salt, generate_jwt, generate_refresh_token};
 use crate::infrastructure::email::mail::{send_validation_email, send_identity_verification};
 
 
@@ -156,6 +157,27 @@ impl IUserRepository for UserRepository {
                 .await
                 .map_err(|e| e.to_string())?;
         }
+
+        let refresh_token = generate_refresh_token();
+
+        let expiration =
+            Utc::now()
+                .checked_add_signed(Duration::minutes(10))
+                .unwrap()
+                .timestamp();
+
+        sqlx::query(r#"
+                INSERT INTO
+                    user_refresh_token (id, token, expire_at)
+                VALUES
+                    ($1, $2, $3);
+            "#)
+                .bind(user_id)
+                .bind(refresh_token)
+                .bind(expiration)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
 
         let token = String::from_utf8(generate_salt()).expect("Erro ao gerar token para validação do email");
         let user_email_validation_id = Uuid::new_v4();
@@ -446,7 +468,32 @@ impl IUserRepository for UserRepository {
 
             let token = generate_jwt(user_auth.get_id()).expect("Erro ao gerar token");
 
-            let _ = jar.add(Cookie::new("access_token", token));
+            let new_jar = jar.add(Cookie::new("access_token", token));
+
+            let refresh_token = generate_refresh_token();
+
+            let expiration =
+                Utc::now()
+                    .checked_add_signed(Duration::days(15))
+                    .unwrap()
+                    .timestamp();
+
+            sqlx::query(r#"
+                    UPDATE
+                        user_refresh_token
+                    SET
+                        token = $1, expire_at = $2
+                    WHERE
+                        id = $3
+                "#)
+                    .bind(refresh_token.clone())
+                    .bind(expiration)
+                    .bind(user_auth.get_id())
+                    .execute(&self.pool)
+                    .await
+                    .map_err(|e| e.to_string())?;
+
+            let _ = new_jar.add(Cookie::new("refresh_token", refresh_token));
 
             return Ok(());
         }
@@ -454,7 +501,9 @@ impl IUserRepository for UserRepository {
         return Err(String::from("Usuário inválido"));
     }
 
-    async fn refresh_token(&self, id: Uuid, token: String, jar: CookieJar) -> Result<(), String> {
+    async fn refresh_token(&self, id: Uuid, jar: CookieJar) -> Result<(), String> {
+        let refresh_token = jar.get("refresh_token").unwrap().to_string();
+
         let user_refresh_token_row: Option<UserRefreshTokenRow> = sqlx::query_as(r#"
             SELECT
                 id, token, expire_at
@@ -464,7 +513,7 @@ impl IUserRepository for UserRepository {
                 id = $1 AND token = $2
         "#)
             .bind(id)
-            .bind(token)
+            .bind(refresh_token)
             .fetch_optional(&self.pool)
             .await
             .map_err(|e| e.to_string())?;

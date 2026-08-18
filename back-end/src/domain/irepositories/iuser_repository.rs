@@ -32,7 +32,7 @@ pub trait IUserRepository {
 
     async fn auth_user(&self, username_or_email: String, password: String, country: String, jar: CookieJar) -> Result<(), String>;
 
-    async fn refresh_token(&self, id: Uuid, token: String, jar: CookieJar) -> Result<(), String>;
+    async fn refresh_token(&self, id: Uuid, jar: CookieJar) -> Result<(), String>;
 
     async fn alter_user_profile(
         &mut self,

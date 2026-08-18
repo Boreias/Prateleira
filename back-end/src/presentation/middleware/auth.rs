@@ -34,7 +34,6 @@ pub async fn auth(
 
             let bd = state.db_pool.clone();
 
-            
             let some_user: Option<UserAuthRow> = sqlx::query_as(r#"
                 SELECT
                     id, username, email, password_hash, salt, country, is_active, is_email_verified, created_at, updated_at
