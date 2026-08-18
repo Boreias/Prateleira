@@ -221,8 +221,7 @@ async fn auth_user(
 
 #[derive(Deserialize)]
 struct RefreshTokenRequest {
-    id: Uuid,
-    token: String
+    id: Uuid
 }
 
 async fn refresh_user_token(
@@ -233,7 +232,7 @@ async fn refresh_user_token(
 ) -> Result<(StatusCode, String), (StatusCode, String)> {
     let service = UserService::new((*state.db_pool).clone());
 
-    match service.refresh_token(payload.id, payload.token, jar).await {
+    match service.refresh_token(payload.id, jar).await {
         Ok(_) => return Ok((StatusCode::OK, String::from("Novo token gerado com sucesso"))),
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
     }

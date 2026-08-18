@@ -65,8 +65,8 @@ impl UserService {
         return self.repository.auth_user(username_or_email, password, country, jar).await;
     }
 
-    pub async fn refresh_token(&self, id: Uuid, token: String, jar: CookieJar) -> Result<(), String> {
-        return self.repository.refresh_token(id, token, jar).await;
+    pub async fn refresh_token(&self, id: Uuid, jar: CookieJar) -> Result<(), String> {
+        return self.repository.refresh_token(id, jar).await;
     }
 
     pub async fn alter_user_profile(

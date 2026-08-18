@@ -4,7 +4,9 @@ use aes_gcm::{
     Aes256Gcm,
     aead::{Aead, AeadCore, KeyInit, OsRng as OsRngAes, generic_array::{GenericArray}}
 };
-use rand::{Rng, rngs::StdRng};
+use rand::{
+    Rng, distr::{Alphanumeric, SampleString}, rngs::StdRng
+};
 use hex::{decode, encode};
 use jsonwebtoken::{
     Algorithm,
@@ -40,7 +42,7 @@ pub fn generate_jwt(user_id: Uuid) -> Result<String, Error> {
 
     let expiration =
         Utc::now()
-            .checked_add_signed(Duration::hours(2))
+            .checked_add_signed(Duration::minutes(10))
             .unwrap()
             .timestamp();
 
@@ -60,6 +62,14 @@ pub fn validate_jwt(token: String) -> Result<TokenData<Claims>, Error> {
     let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY não definido");
 
     json_decode::<Claims>(&token, &DecodingKey::from_secret(secret_key.as_bytes()), &Validation::new(Algorithm::HS256))
+}
+
+pub fn generate_refresh_token() -> String {
+    let secure_string = Alphanumeric.sample_string(&mut rand::rng(), 32);
+    let mut hasher = Sha256::new();
+    hasher.update(secure_string);
+
+    encode(hasher.finalize().to_vec())
 }
 
 pub fn simple_hash(key: &[u8], data: String) -> String {
