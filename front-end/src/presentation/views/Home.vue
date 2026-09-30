@@ -14,7 +14,6 @@
     } catch (error) {
       console.error("Erro nas requisições: ", error)
     }
-    
   })
 </script>
 

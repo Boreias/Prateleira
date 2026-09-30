@@ -28,7 +28,12 @@
                     <option value="editoras" v-on:click="">Editoras</option>
                     <option value="generos" v-on:click="">Gêneros</option>
                 </select>
-                <Button msg="Login" />
+
+                 <nav>
+                    <RouterLink class="router_link_styled" to="/login">
+                        <Button msg="Entrar" />
+                    </RouterLink>
+                </nav>
             </div>
         </div>
     </div>
